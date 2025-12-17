@@ -31,6 +31,7 @@ def zip_checker(url, data, excluded_extention=('.odt', '.docx', '.xlsx', 'pdf'))
     return binary_data[:4] == ZIP_MAGIC
 
 
+
 def unzipper(data):
     unzipped_files = []
     zip_stream = io.BytesIO(data.content)
@@ -39,6 +40,51 @@ def unzipper(data):
     dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_stream, 'r') as zip_ref:
         zip_ref.extractall(path=dir)
+    for file in dir.iterdir():
+        if zipfile.is_zipfile(file):
+            # add functionality to recursive find zip files and unzip so it can be added to unzipped_files
+            pass
+        else:
+            unzipped_files.append(file)
+    return unzipped_files
+
+def unzipper_v2(data):
+    base_dir = Path.cwd() / "unzipped_data"
+    base_dir.mkdir(parents=True, exist_ok=True)
+    zip_stream = io.BytesIO(data.content)
+    return extract_recursive(zip_stream, base_dir)
+
+def extract_recursive(zip_input, extract_to, excluded_extention=('.odt', '.docx', '.xlsx', 'pdf')):
+    unzipped_files = []
+    with zipfile.ZipFile(zip_input, 'r') as zip_ref:
+        zip_ref.extractall(path=extract_to)
+
+    # Get a list of items inside 'unzipped_data'
+    extracted_items = list(extract_to.iterdir())
+
+    # If there is exactly one item and it's a directory, move our 'target' inside it
+    if len(extracted_items) == 1 and extracted_items[0].is_dir():
+        target_dir = extracted_items[0]
+    else:
+        target_dir = extract_to
+
+    for item in target_dir.iterdir():
+        print(item)
+        if item.is_file() and zipfile.is_zipfile(item) and item.suffix not in excluded_extention:
+            nested_dir = item.with_suffix('')
+            nested_dir.mkdir(exist_ok=True)
+            unzipped_files.extend(extract_recursive(item, nested_dir))
+            # Remove the nested .zip file after extraction
+            item.unlink()
+        elif item.is_file():
+            unzipped_files.append(item)
+
+    return unzipped_files
+
+
+
+
+
 
     print("unzipped files")
     #
@@ -73,7 +119,7 @@ def get_rm_page_data():
                 blob_client.upload_blob(data=response.content, overwrite=True
                                         )
             if is_zip is True:
-                data_to_unzip = unzipper(response)
+                data_to_unzip = unzipper_v2(response)
                 for unzipped_file in data_to_unzip:
                     azure_file_name = Path(unzipped_file).name
                     blob_client = BlobClient.from_connection_string(
