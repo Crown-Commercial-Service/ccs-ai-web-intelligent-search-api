@@ -66,8 +66,13 @@ def ai_search_api(query: SearchQuery):
         if len(top_results) == query.total_results:
             break
     new_results = rerank_list(user_query=query.query, results=top_results)
+    full_result =""
+    for i, res in enumerate(new_results):
+        # res['@search.score'] will be based on the best chunk found for that title
+        print(f"{i + 1:<5} | {res['title'][:38]:<40} | {res['@search.score']:.4f}")
+        full_result += f"\n {i + 1:<5} | {res['title']}"
 
     return new_results
 
 #uvicorn ai_search_api:app --reload --host 127.0.0.1 --port 5000
-# curl -X POST "http://127.0.0.1:5000/results"      -H "Content-Type: application/json"      -d '{"query": "AI", "tal_results": 10, "status": "expired"}'
+# curl -X POST "http://127.0.0.1:5000/results"      -H "Content-Type: application/json"      -d '{"query": "AI", "total_results": 10, "status": "expired"}'

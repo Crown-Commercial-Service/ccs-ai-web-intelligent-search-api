@@ -77,7 +77,7 @@ def load_files_for_links():
 def ai_search_api(query: SearchQuery):
 
     # load csv with files for links
-    URLS = load_files_for_links()
+    # URLS = load_files_for_links()
 
     # store past query in cosmodb and pull it out for llm based on user_id
 
@@ -89,8 +89,12 @@ def ai_search_api(query: SearchQuery):
     config = {"configurable": {"thread_id": query.user_id}}
     # answer_once(graph=graph, user_input=query.query,config=config,thread_id=query.user_id)
     response = answer_once(graph=graph, user_input=query.query,config=config,thread_id=query.user_id)
-
-    return response
+    print(f"user: {query.query}")
+    print()
+    print(f"AI: {response["answer"]}")
+    print()
+    print(f"links below:\n {response["source_names"]}")
+    return {"AI_response":response["answer"], "source_content":response["source_names"]}
 
 # uvicorn chatbot_api:app --reload --host 127.0.0.1 --port 5000
 #  curl -X POST "http://127.0.0.1:5000/results"      -H "Content-Type: application/json"      -d '{"user_id": "abc","query": "what is  1+1"}'
