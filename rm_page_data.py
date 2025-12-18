@@ -19,11 +19,11 @@ ccs_frameworks = fetch_all_ccs_frameworks()
 
 #get df and loop through all titles and download files into blob storage so it can be used for RAG
 base_url = "https://webprod-cms.crowncommercial.gov.uk/wp-json/ccs/v1/frameworks/"
-def zip_checker(url, data, excluded_extention=('.odt', '.docx', '.xlsx', 'pdf')):
+def zip_checker(url, data, excluded_extension=('.odt', '.docx', '.xlsx', 'pdf')):
     ZIP_MAGIC = b'\x50\x4b\x03\x04'
     binary_data = data.content
     extension = Path(url)
-    if extension.suffix in excluded_extention:
+    if extension.suffix in excluded_extension:
         return False
     # if bytes is less than 4 then it cannot be zip
     if len(binary_data) < 4:
@@ -32,21 +32,21 @@ def zip_checker(url, data, excluded_extention=('.odt', '.docx', '.xlsx', 'pdf'))
 
 
 
-def unzipper(data):
-    unzipped_files = []
-    zip_stream = io.BytesIO(data.content)
-    # have save the data in RAM
-    dir = Path.cwd() / "unzipped_data"
-    dir.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(zip_stream, 'r') as zip_ref:
-        zip_ref.extractall(path=dir)
-    for file in dir.iterdir():
-        if zipfile.is_zipfile(file):
-            # add functionality to recursive find zip files and unzip so it can be added to unzipped_files
-            pass
-        else:
-            unzipped_files.append(file)
-    return unzipped_files
+# def unzipper(data):
+#     unzipped_files = []
+#     zip_stream = io.BytesIO(data.content)
+#     # have save the data in RAM
+#     dir = Path.cwd() / "unzipped_data"
+#     dir.mkdir(parents=True, exist_ok=True)
+#     with zipfile.ZipFile(zip_stream, 'r') as zip_ref:
+#         zip_ref.extractall(path=dir)
+#     for file in dir.iterdir():
+#         if zipfile.is_zipfile(file):
+#             # add functionality to recursive find zip files and unzip so it can be added to unzipped_files
+#             pass
+#         else:
+#             unzipped_files.append(file)
+#     return unzipped_files
 
 def unzipper_v2(data):
     base_dir = Path.cwd() / "unzipped_data"
@@ -54,7 +54,7 @@ def unzipper_v2(data):
     zip_stream = io.BytesIO(data.content)
     return extract_recursive(zip_stream, base_dir)
 
-def extract_recursive(zip_input, extract_to, excluded_extention=('.odt', '.docx', '.xlsx', 'pdf')):
+def extract_recursive(zip_input, extract_to, excluded_extension=('.odt', '.docx', '.xlsx', 'pdf'), excluded_filenames = ['mimetype', '.DS_Store', 'thumbs.db']):
     unzipped_files = []
     with zipfile.ZipFile(zip_input, 'r') as zip_ref:
         zip_ref.extractall(path=extract_to)
@@ -70,13 +70,13 @@ def extract_recursive(zip_input, extract_to, excluded_extention=('.odt', '.docx'
 
     for item in target_dir.iterdir():
         print(item)
-        if item.is_file() and zipfile.is_zipfile(item) and item.suffix not in excluded_extention:
+        if item.is_file() and zipfile.is_zipfile(item) and item.suffix not in excluded_extension:
             nested_dir = item.with_suffix('')
             nested_dir.mkdir(exist_ok=True)
             unzipped_files.extend(extract_recursive(item, nested_dir))
             # Remove the nested .zip file after extraction
             item.unlink()
-        elif item.is_file():
+        elif item.is_file() and item.suffix != ".xml" and item.name.lower() not in excluded_filenames:
             unzipped_files.append(item)
 
     return unzipped_files
