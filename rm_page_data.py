@@ -76,7 +76,7 @@ def extract_recursive(zip_input, extract_to, excluded_extension=('.odt', '.docx'
             unzipped_files.extend(extract_recursive(item, nested_dir))
             # Remove the nested .zip file after extraction
             item.unlink()
-        elif item.is_file() and item.suffix != ".xml" and item.name.lower() not in excluded_filenames:
+        elif item.is_file() and item.suffix != ".xml" and item.suffix != ".rdf" and item.name.lower() not in excluded_filenames:
             unzipped_files.append(item)
 
     return unzipped_files
@@ -98,6 +98,7 @@ def extract_recursive(zip_input, extract_to, excluded_extension=('.odt', '.docx'
 def get_rm_page_data():
     for index, row  in ccs_frameworks.iterrows():
         frame_work = row["rm_number"]
+        print(f"position:{index} frame_work:{frame_work}")
         new_url = base_url + frame_work
         response = requests.get(new_url)
         data = response.json()
@@ -106,22 +107,11 @@ def get_rm_page_data():
         for doc in documents:
             print(doc["title"], doc["url"])
             data_url = doc["url"]
-
-            response = requests.get(data_url, stream=True)
-            is_zip = zip_checker(data_url, response)
-            if is_zip is False:
-                azure_file_name = Path(data_url).name
-                blob_client = BlobClient.from_connection_string(
-                    conn_str=os.getenv("BLOB_CONNECTION_STRING"),
-                    container_name=os.getenv("BLOB_CONTAINER_NAME"),
-                    blob_name=azure_file_name
-                )
-                blob_client.upload_blob(data=response.content, overwrite=True
-                                        )
-            if is_zip is True:
-                data_to_unzip = unzipper_v2(response)
-                for unzipped_file in data_to_unzip:
-                    azure_file_name = Path(unzipped_file).name
+            try:
+                response = requests.get(data_url, stream=True)
+                is_zip = zip_checker(data_url, response)
+                if is_zip is False:
+                    azure_file_name = Path(data_url).name
                     blob_client = BlobClient.from_connection_string(
                         conn_str=os.getenv("BLOB_CONNECTION_STRING"),
                         container_name=os.getenv("BLOB_CONTAINER_NAME"),
@@ -129,6 +119,19 @@ def get_rm_page_data():
                     )
                     blob_client.upload_blob(data=response.content, overwrite=True
                                             )
+                if is_zip is True:
+                    data_to_unzip = unzipper_v2(response)
+                    for unzipped_file in data_to_unzip:
+                        azure_file_name = Path(unzipped_file).name
+                        blob_client = BlobClient.from_connection_string(
+                            conn_str=os.getenv("BLOB_CONNECTION_STRING"),
+                            container_name=os.getenv("BLOB_CONTAINER_NAME"),
+                            blob_name=azure_file_name
+                        )
+                        blob_client.upload_blob(data=response.content, overwrite=True
+                                                )
+            except Exception as e:
+                print(e)
 
 
 
