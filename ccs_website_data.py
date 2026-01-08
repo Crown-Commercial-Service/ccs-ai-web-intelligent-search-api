@@ -93,4 +93,4 @@ def fetch_all_ccs_frameworks(status='Live,Expired'):
 
 
 
-df_public_frameworks = fetch_all_ccs_frameworks()
+# df_public_frameworks = fetch_all_ccs_frameworks()
