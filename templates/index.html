@@ -24,6 +24,11 @@
         .top-nav { background: #8fb3ff; padding: 10px 5%; font-size: 14px; border-bottom: 1px solid #bfc1c3; display: flex; justify-content: space-between; }
         header { padding: 20px 5%; display: flex; align-items: center; justify-content: space-between; }
         .logo { font-weight: bold; font-size: 20px; display: flex; align-items: center; }
+        .logo img {
+    height: 85px;  /* Adjust this value (e.g., 20px, 30px) to your liking */
+    width: auto;   /* Maintains aspect ratio */
+    margin-right: 8px;
+}
         nav ul { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; }
         nav ul li a { text-decoration: none; color: var(--ccs-text); font-weight: bold; font-size: 14px; }
 
@@ -84,13 +89,13 @@
 <body>
 
     <div class="top-nav">
-        <div><span style="background:#005ea5; color:#fff; padding:2px 5px;">beta</span> Help us make this service better. <u>Give feedback</u></div>
+        <div><span style="background:#b9d2e8; color:#090b10; padding:2px 5px;">beta</span> Help us make this service better. <u>Give feedback</u></div>
         <div>Public Procurement Gateway: <a href="#">Create account</a> or <a href="#">Sign in</a></div>
     </div>
 
     <header style="background-color: #8fb3ff; padding: 10px 20px;">
         <div class="logo">
-            <img src="{{ url_for('static', filename='ccs-logo.png') }}" alt="Logo"> Crown Commercial Service
+            <img src="{{ url_for('static', filename='logo2.png') }}" alt="Logo">
         </div>
         <nav >
             <ul>

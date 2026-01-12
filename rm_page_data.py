@@ -10,7 +10,7 @@ load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 # base_url = "https://webprod-cms.crowncommercial.gov.uk/wp-json/ccs/v1/frameworks/RM6200"
 # temporary code on line 13 as my pc turned off and stop downloading the files
-ccs_frameworks = ccs_frameworks[70:]
+ccs_frameworks = ccs_frameworks[80:]
 # response = requests.get(base_url)
 # print(response.json())
 # you need to check the description and documents
