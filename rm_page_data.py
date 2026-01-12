@@ -9,7 +9,8 @@ import io
 load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 # base_url = "https://webprod-cms.crowncommercial.gov.uk/wp-json/ccs/v1/frameworks/RM6200"
-
+# temporary code on line 13 as my pc turned off and stop downloading the files
+ccs_frameworks = ccs_frameworks[70:]
 # response = requests.get(base_url)
 # print(response.json())
 # you need to check the description and documents
@@ -18,7 +19,7 @@ ccs_frameworks = fetch_all_ccs_frameworks()
 
 
 #get df and loop through all titles and download files into blob storage so it can be used for RAG
-base_url = "https://webprod-cms.crowncommercial.gov.uk/wp-json/ccs/v1/frameworks/"
+base_url = os.getenv("BASE_URL")
 def zip_checker(url, data, excluded_extension=('.odt', '.docx', '.xlsx', 'pdf')):
     ZIP_MAGIC = b'\x50\x4b\x03\x04'
     binary_data = data.content
@@ -102,12 +103,12 @@ def get_rm_page_data():
         new_url = base_url + frame_work
         response = requests.get(new_url)
         data = response.json()
-
+        print(f"This is the data: {data}")
         documents = data['documents']
         for doc in documents:
-            print(doc["title"], doc["url"])
-            data_url = doc["url"]
             try:
+                print(doc["title"], doc["url"])
+                data_url = doc["url"]
                 response = requests.get(data_url, stream=True)
                 is_zip = zip_checker(data_url, response)
                 if is_zip is False:
@@ -131,9 +132,10 @@ def get_rm_page_data():
                         blob_client.upload_blob(data=response.content, overwrite=True
                                                 )
             except Exception as e:
-                print(e)
 
+                print(f"This the error that caused the failed download {e}")
 
+    # delete unzipped_data folder
 
 
 
