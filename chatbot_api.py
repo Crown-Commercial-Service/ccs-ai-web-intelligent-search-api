@@ -15,8 +15,9 @@ from fastapi import  FastAPI
 import pandas as pd
 import io
 from pydantic import BaseModel
-
-
+from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timedelta, timezone
+from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 
 load_dotenv()
 
@@ -54,6 +55,14 @@ checkpointer = CosmosDBSaver(
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows your Flask app to talk to FastAPI
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class SearchQuery(BaseModel):
     user_id:str
     query:str
@@ -94,7 +103,37 @@ def ai_search_api(query: SearchQuery):
     print(f"AI: {response["answer"]}")
     print()
     print(f"links below:\n {response["source_names"]}")
-    return {"AI_response":response["answer"], "source_content":response["source_names"]}
+    sources = list(set(response["source_names"]))
+    #todo download the sources
+    return {"AI_response":response["answer"], "source_content":sources}
 
-# uvicorn chatbot_api:app --reload --host 127.0.0.1 --port 5000
-#  curl -X POST "http://127.0.0.1:5000/results"      -H "Content-Type: application/json"      -d '{"user_id": "abc","query": "what is  1+1"}'
+
+@app.get("/get_download_url/{file_name}")
+def get_download_url(file_name: str):
+    # Setup credentials (ensure these are in your .env)
+    account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
+    account_key = os.getenv('AZURE_STORAGE_KEY')
+    container_name = os.getenv('BLOB_CONTAINER_NAME')
+    blob_url = os.getenv('BLOB_URL')
+
+    # Set expiry for 1 hour
+    expiry_time = datetime.now(timezone.utc) + timedelta(hours=1)
+
+    # Generate SAS token with 'attachment' disposition to force download
+    sas_token = generate_blob_sas(
+        account_name=account_name,
+        container_name=container_name,
+        blob_name=file_name,
+        account_key=account_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=expiry_time,
+        # This is the line that forces the "Save As" behavior
+        content_disposition=f'attachment; filename="{file_name}"'
+    )
+
+    download_url = f"{blob_url.rstrip('/')}/{container_name.strip('/')}/{file_name.lstrip('/')}?{sas_token}"
+    print(f"download url: {download_url}")
+    return {"download_url": download_url}
+
+# uvicorn chatbot_api:app --reload --host 127.0.0.1 --port 8000
+#  curl -X POST "http://127.0.0.1:8000/results"      -H "Content-Type: application/json"      -d '{"user_id": "abc","query": "what is  1+1"}'
