@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Access Gateway</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; color: #0b0c0c; line-height: 1.5; }
+        header { background-color: #8fb3ff; padding: 10px 20px; display: flex; align-items: center; }
+        .logo img { height: 85px; width: auto; }
+        .hero { background-color: #8fb3ff; padding: 60px 5%; display: flex; justify-content: flex-start; align-items: center; gap: 60px; }
+        .hero-content { max-width: 500px; }
+        .search-card { background: rgba(255, 255, 255, 0.4); padding: 20px; width: 240px; border-radius: 4px; display: flex; flex-direction: column; gap: 10px; }
+        .search-card input { width: 100%; padding: 10px; border: 1px solid #000; box-sizing: border-box; }
+        .btn-continue { background-color: #008250; color: white; border: none; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-continue:hover { background-color: #005a37; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo"><img src="{{ url_for('static', filename='logo2.png') }}" alt="Logo"></div>
+    </header>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>App Testing Access Gateway</h1>
+            <p>Please enter your access key to proceed to the application.</p>
+        </div>
+<form class="search-card" method="POST" action="/">
+    <strong>Access Key</strong>
+
+    {% if error %}
+    <p style="color: #d4351c; font-size: 14px; font-weight: bold; margin: 5px 0;">
+        ⚠ {{ error }}
+    </p>
+    {% endif %}
+
+    <input type="text" name="access_key" placeholder="Enter key..." required>
+    <button type="submit" class="btn-continue">Continue</button>
+</form>
+    </section>
+</body>
+</html>
