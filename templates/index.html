@@ -106,9 +106,15 @@
     line-height: 1.4;
 }
 
-.download-btn:hover {
-    background: #005ea5;
-    color: white;
+    .download-btn:hover {
+        background: #005ea5;
+        color: white;
+    }
+        .msg, .msg-bot, .msg-user {
+    word-wrap: break-word;       /* Older browser support */
+    overflow-wrap: break-word;   /* Prevents text from pushing past the edge */
+    word-break: break-word;      /* Forces long strings like URLs to wrap */
+    max-width: 90%;              /* Ensures bubble doesn't hit the very edge */
 }
     </style>
 </head>
@@ -137,7 +143,9 @@
         <button id="chat-toggle" style="position: fixed; bottom: 20px; right: 20px; background: #005ea5; color: white; border: none; padding: 15px; border-radius: 50%; cursor: pointer; z-index: 1000;">💬</button>
         <div id="chat-window">
         <div class="chat-header" style="background: #6a99ff">CCS Assistant</div>
-        <div id="chat-messages"></div>
+        <div id="chat-messages">         <div style="background: #f3f2f1; padding: 10px; border-radius: 8px; align-self: flex-start;">
+                Hello! I am your web guide. How can I help you today?
+            </div> </div>
         <div style="padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px;">
             <input type="text" id="chat-input" placeholder="Ask about CCS frameworks..." style="flex: 1; padding: 8px;">
             <button onclick="sendQuery()" style="background: #00703c; color: white; border: none; padding: 8px 12px; cursor: pointer;">Send</button>
@@ -253,7 +261,12 @@ const chatWindow = document.getElementById('chat-window');
 
         // Toggle visibility
         document.getElementById('chat-toggle').onclick = () => {
-            chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+            // If it's currently flex, hide it. Otherwise, show it.
+            if (chatWindow.style.display === 'flex') {
+                chatWindow.style.display = 'none';
+            } else {
+                chatWindow.style.display = 'flex';
+            }
         };
 
         async function downloadSource(fileName) {
@@ -297,7 +310,7 @@ const chatWindow = document.getElementById('chat-window');
                 const data = await response.json();
 
                 // 3. Process AI_response and source_content
-                let responseHTML = `<div>${data.AI_response}</div>`;
+                let responseHTML = `<div class="msg-content">${data.AI_response}</div>`;
 
                 if (data.source_content && data.source_content.length > 0) {
                     responseHTML += `
@@ -326,6 +339,9 @@ const chatWindow = document.getElementById('chat-window');
             msg.style.padding = "10px";
             msg.style.borderRadius = "8px";
             msg.style.maxWidth = "85%";
+
+            msg.style.overflowWrap = "break-word";
+            msg.style.wordBreak = "break-word";
 
             if (sender === 'user') {
                 msg.style.background = "#005ea5";

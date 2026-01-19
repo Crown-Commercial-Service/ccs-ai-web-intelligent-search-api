@@ -17,6 +17,7 @@ def login():
 
         # Define your secret key here
         if access_key == os.getenv('TEST_ACCESS_KEY'):
+            session['logged_in'] = True
             return redirect(url_for('index'))
         else:
             error = "Invalid access key. Please try again or contact support."
@@ -24,9 +25,12 @@ def login():
     return render_template('login.html', error=error)
 
 
-# 2. The Main Page (Where they go after login)
+
 @app.route('/index')
 def index():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
 

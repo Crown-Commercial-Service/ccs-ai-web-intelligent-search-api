@@ -1,2 +1,8 @@
 .env
 unzipped_data
+.idea
+ __pycache__/
+agreements_data_csv.py
+src/__pycache__/
+website_agreement_data.csv
+website_agreement_data2.csv

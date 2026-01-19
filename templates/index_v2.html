@@ -92,6 +92,13 @@
         .download-btn:hover { background: #005ea5; color: white; }
 
         #chat-toggle { display: none; } /* Hidden as sidebar is persistent */
+
+          .msg, .msg-bot, .msg-user {
+            word-wrap: break-word;       /* Older browser support */
+            overflow-wrap: break-word;   /* Prevents text from pushing past the edge */
+            word-break: break-word;      /* Forces long strings like URLs to wrap */
+            max-width: 90%;              /* Ensures bubble doesn't hit the very edge */
+        }
     </style>
 </head>
 <body>
@@ -248,7 +255,7 @@
                 });
 
                 const data = await response.json();
-                let responseHTML = `<div>${data.AI_response}</div>`;
+                let responseHTML = `<div class="msg-content">${data.AI_response}</div>`;
 
                 if (data.source_content && data.source_content.length > 0) {
                     responseHTML += `
@@ -272,6 +279,10 @@
             msg.style.padding = "10px";
             msg.style.borderRadius = "8px";
             msg.style.maxWidth = "85%";
+
+            msg.style.overflowWrap = "break-word";
+            msg.style.wordBreak = "break-word";
+
             if (sender === 'user') {
                 msg.style.background = "#005ea5";
                 msg.style.color = "white";
