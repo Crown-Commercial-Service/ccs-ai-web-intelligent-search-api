@@ -33,7 +33,7 @@ def fetch_all_ccs_frameworks(status='Live,Expired'):
     while True:
         params = {
             "status[]": status,
-            "limit": 100,
+            "limit": 300,
             "page": page_number
         }
 

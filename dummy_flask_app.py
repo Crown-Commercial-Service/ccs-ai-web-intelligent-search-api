@@ -30,7 +30,7 @@ def index():
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
 
-    return render_template('index.html', user_id=session['user_id'])
+    return render_template('index_v2.html', user_id=session['user_id'])
 
 
 if __name__ == '__main__':

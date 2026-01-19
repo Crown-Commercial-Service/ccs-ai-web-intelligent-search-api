@@ -6,11 +6,13 @@ from azure.storage.blob import BlobClient
 from pathlib import Path
 import zipfile
 import io
+import shutil
+
 load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 # base_url = "https://webprod-cms.crowncommercial.gov.uk/wp-json/ccs/v1/frameworks/RM6200"
 # temporary code on line 13 as my pc turned off and stop downloading the files
-ccs_frameworks = ccs_frameworks[80:]
+# ccs_frameworks = ccs_frameworks[100:]
 # response = requests.get(base_url)
 # print(response.json())
 # you need to check the description and documents
@@ -134,6 +136,12 @@ def get_rm_page_data():
             except Exception as e:
 
                 print(f"This the error that caused the failed download {e}")
+            finally:
+                unzipped_dir = Path.cwd() / "unzipped_data"
+                if unzipped_dir.exists() and unzipped_dir.is_dir():
+                    print(f"Cleaning up: {unzipped_dir}")
+                    # shutil still handles the recursive deletion best
+                    shutil.rmtree(unzipped_dir)
 
     # delete unzipped_data folder
 
