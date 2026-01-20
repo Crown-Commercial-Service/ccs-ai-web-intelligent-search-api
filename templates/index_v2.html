@@ -221,10 +221,10 @@
     <script>
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
-
+        const DOWNLOAD_URL = {{ download_url | tojson }};
         async function downloadSource(fileName) {
             try {
-                const response = await fetch(`http://127.0.0.1:8000/get_download_url/${fileName}`);
+                const response = await fetch(`${DOWNLOAD_URL}/${encodeURIComponent(fileName)}`);
                 const data = await response.json();
                 const hiddenLink = document.createElement('a');
                 hiddenLink.href = data.download_url;
