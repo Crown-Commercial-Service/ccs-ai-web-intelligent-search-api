@@ -7,7 +7,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-
+api_url = os.getenv('WEBSEARCH_API_URL')
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -34,7 +34,7 @@ def index():
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
 
-    return render_template('index_v2.html', user_id=session['user_id'])
+    return render_template('index_v2.html', user_id=session['user_id'], api_url=api_url)
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 # base_url = "https://webprod-cms.crowncommercial.gov.uk/wp-json/ccs/v1/frameworks/RM6200"
 # temporary code on line 13 as my pc turned off and stop downloading the files
-# ccs_frameworks = ccs_frameworks[100:]
+ccs_frameworks = ccs_frameworks[149:]
 # response = requests.get(base_url)
 # print(response.json())
 # you need to check the description and documents
@@ -96,17 +96,31 @@ def extract_recursive(zip_input, extract_to, excluded_extension=('.odt', '.docx'
 
 
 
+def agreement_docs( frame_work):
+    try:
+        new_url = base_url + frame_work
+        response = requests.get(new_url)
+        data = response.json()
+        print(f"This is the data: {data}")
+        documents = data['documents']
+        return documents
+    except Exception as e:
+        print(f"This the error that caused the failed download {e}")
 
 
 def get_rm_page_data():
     for index, row  in ccs_frameworks.iterrows():
         frame_work = row["rm_number"]
         print(f"position:{index} frame_work:{frame_work}")
-        new_url = base_url + frame_work
-        response = requests.get(new_url)
-        data = response.json()
-        print(f"This is the data: {data}")
-        documents = data['documents']
+        documents = agreement_docs(frame_work)
+        # new_url = base_url + frame_work
+        # response = requests.get(new_url)
+        # data = response.json()
+        # print(f"This is the data: {data}")
+        # documents = data['documents']
+        # Guard clause: if agreement_docs returns None/Empty, skip to next framework
+        if not documents:
+            continue
         for doc in documents:
             try:
                 print(doc["title"], doc["url"])
@@ -123,25 +137,29 @@ def get_rm_page_data():
                     blob_client.upload_blob(data=response.content, overwrite=True
                                             )
                 if is_zip is True:
-                    data_to_unzip = unzipper_v2(response)
-                    for unzipped_file in data_to_unzip:
-                        azure_file_name = Path(unzipped_file).name
-                        blob_client = BlobClient.from_connection_string(
-                            conn_str=os.getenv("BLOB_CONNECTION_STRING"),
-                            container_name=os.getenv("BLOB_CONTAINER_NAME"),
-                            blob_name=azure_file_name
-                        )
-                        blob_client.upload_blob(data=response.content, overwrite=True
-                                                )
+                    try:
+                        data_to_unzip = unzipper_v2(response)
+                        for unzipped_file in data_to_unzip:
+                            azure_file_name = Path(unzipped_file).name
+                            blob_client = BlobClient.from_connection_string(
+                                conn_str=os.getenv("BLOB_CONNECTION_STRING"),
+                                container_name=os.getenv("BLOB_CONTAINER_NAME"),
+                                blob_name=azure_file_name
+                            )
+                            with open(unzipped_file, "rb") as file:
+                                blob_client.upload_blob(data=file, overwrite=True
+                                                        )
+                    finally:
+                        unzipped_dir = Path.cwd() / "unzipped_data"
+                        if unzipped_dir.exists() and unzipped_dir.is_dir():
+                            print(f"Cleaning up: {unzipped_dir}")
+                            # shutil still handles the recursive deletion best
+                            shutil.rmtree(unzipped_dir)
             except Exception as e:
 
                 print(f"This the error that caused the failed download {e}")
-            finally:
-                unzipped_dir = Path.cwd() / "unzipped_data"
-                if unzipped_dir.exists() and unzipped_dir.is_dir():
-                    print(f"Cleaning up: {unzipped_dir}")
-                    # shutil still handles the recursive deletion best
-                    shutil.rmtree(unzipped_dir)
+
+
 
     # delete unzipped_data folder
 
