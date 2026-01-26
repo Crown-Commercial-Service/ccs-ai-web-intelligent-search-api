@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-url" content="{{ api_url }}">
+    <meta name="download-url" content="{{ download_url }}">
     <title>Crown Commercial Service - Full Page</title>
     <style>
         :root {
@@ -41,8 +43,56 @@
         .hero { background-color:#8fb3ff; padding: 60px 5%; display: flex; justify-content: space-between; align-items: center; }
         .hero-content { max-width: 500px; }
         .search-boxes { display: flex; gap: 20px; }
-        .search-card { background: rgba(255,255,255,0.4); padding: 20px; width: 220px; }
-        .search-card input { width: 90%; padding: 8px; border: 1px solid #000; margin-top: 10px; }
+        .search-card { background: rgba(255,255,255,0.25); padding: 20px; width: 380px; border-radius: 6px; }
+        .search-title { font-size: 28px; font-weight: 700; text-decoration: underline; text-underline-offset: 6px; }
+
+        .search-form {
+            margin-top: 12px;
+            display: flex;
+            align-items: stretch;
+            border: 3px solid #ffdd00; /* yellow border */
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .search-form input[type="text"] {
+            flex: 1;
+            border: 0;
+            outline: none;
+            padding: 10px 12px;
+            font-size: 16px;
+        }
+
+        .search-form button {
+            width: 64px;
+            border: 0;
+            cursor: pointer;
+            background: #b5c327; /* green block */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-form button:hover { filter: brightness(0.95); }
+
+        .search-form button svg {
+            width: 24px;
+            height: 24px;
+            fill: #0b0c0c;
+        }
+
+        /* Disabled variant (keeps layout identical, just non-interactive) */
+        .search-form.is-disabled {
+            opacity: 0.75;
+        }
+        .search-form.is-disabled input,
+        .search-form.is-disabled button {
+            cursor: not-allowed;
+        }
+        .search-form.is-disabled button {
+            filter: grayscale(20%);
+        }
 
         /* Info & News Sections */
         .info-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 50px 5%; }
@@ -130,8 +180,28 @@
                 <p><a href="#">Find out how we help the UK public sector achieve value for the nation in our digital brochure.</a></p>
             </div>
             <div class="search-boxes">
-                <div class="search-card"><strong>Search agreements</strong><input type="text"></div>
-                <div class="search-card"><strong>Search suppliers</strong><input type="text"></div>
+                <div class="search-card">
+                    <div class="search-title">Search agreements</div>
+                    <form class="search-form" action="{{ url_for('results') }}" method="get">
+                        <input type="text" name="q" aria-label="Search agreements" />
+                        <button type="submit" aria-label="Search">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M10 4a6 6 0 1 1 0 12A6 6 0 0 1 10 4m0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                <div class="search-card">
+                    <div class="search-title">Search suppliers</div>
+                    <form class="search-form is-disabled" onsubmit="return false;">
+                        <input type="text" aria-label="Search suppliers (coming soon)" placeholder="Coming soon" disabled />
+                        <button type="button" aria-label="Search (coming soon)" disabled>
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M10 4a6 6 0 1 1 0 12A6 6 0 0 1 10 4m0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
 
@@ -221,7 +291,8 @@
     <script>
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
-        const DOWNLOAD_URL = {{ download_url | tojson }};
+        const API_URL = document.querySelector('meta[name="api-url"]').content;
+        const DOWNLOAD_URL = document.querySelector('meta[name="download-url"]').content;
         async function downloadSource(fileName) {
             try {
                 const response = await fetch(`${DOWNLOAD_URL}/${encodeURIComponent(fileName)}`);
@@ -243,7 +314,6 @@
 
             appendMessage(query, 'user');
             chatInput.value = '';
-            const API_URL = {{ api_url | tojson }};
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',

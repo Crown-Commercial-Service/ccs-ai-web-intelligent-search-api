@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-url" content="{{ api_url }}">
+    <meta name="download-url" content="{{ download_url }}">
+    <title>Crown Commercial Service - Results</title>
+    <style>
+        :root {
+            --ccs-blue: #005ea5;
+            --ccs-light-blue: #b1d1e3;
+            --ccs-text: #0b0c0c;
+            --ccs-grey: #f3f2f1;
+            --ccs-glossary: #eef2d8;
+            --ccs-link: #1d70b8;
+            --ccs-border: #d8dde0;
+            --sidebar-width: 380px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            color: var(--ccs-text);
+            line-height: 1.5;
+            display: flex;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            min-width: 0;
+        }
+
+        .top-nav {
+            background: #8fb3ff;
+            padding: 10px 5%;
+            font-size: 14px;
+            border-bottom: 1px solid #bfc1c3;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        header {
+            padding: 20px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img { height: 85px; width: auto; margin-right: 8px; }
+        nav ul { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; }
+        nav ul li a { text-decoration: none; color: var(--ccs-text); font-weight: bold; font-size: 14px; }
+
+        /* CCS-like Search Agreements layout */
+        .content { padding: 30px 5% 60px; }
+        .wrap { max-width: 1200px; }
+
+        .breadcrumbs {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 18px 0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #505a5f;
+        }
+        .breadcrumbs li::after { content: "›"; margin-left: 8px; color: #b1b4b6; }
+        .breadcrumbs li:last-child::after { content: ""; }
+        .breadcrumbs a { color: var(--ccs-link); text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+
+        h1 { margin: 0 0 18px 0; font-size: 40px; line-height: 1.15; }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        /* Filter rail (non-functional) */
+        .filters {
+            border: 1px solid var(--ccs-border);
+            border-radius: 8px;
+            padding: 16px;
+            background: #fff;
+        }
+        .filters h2 { margin: 0 0 10px 0; font-size: 18px; }
+        .filters .actions { display: flex; gap: 10px; margin-bottom: 12px; }
+        .filters button {
+            border: 1px solid var(--ccs-border);
+            background: #f8f8f8;
+            padding: 8px 10px;
+            border-radius: 4px;
+            cursor: not-allowed;
+            color: #505a5f;
+            font-weight: 700;
+        }
+        .filter-section { border-top: 1px solid var(--ccs-border); padding-top: 12px; margin-top: 12px; }
+        .filter-section h3 { margin: 0 0 8px 0; font-size: 16px; }
+        .filter-option { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 14px; }
+        .filter-option input { width: 18px; height: 18px; }
+        .filter-select { width: 100%; padding: 10px; border: 1px solid var(--ccs-border); border-radius: 4px; background: #fff; color: #505a5f; }
+        .filter-help { font-size: 13px; color: #505a5f; margin: 8px 0 0 0; }
+        .filter-link { color: var(--ccs-link); text-decoration: none; font-weight: 700; }
+        .filter-link:hover { text-decoration: underline; }
+
+        /* Results list */
+        .results-count { font-size: 26px; font-weight: 700; margin: 0 0 18px 0; }
+        .result-item { padding: 18px 0; border-bottom: 1px solid var(--ccs-border); }
+        .result-title { margin: 0 0 10px 0; font-size: 26px; line-height: 1.25; font-weight: 700; }
+        .result-title a { color: var(--ccs-link); text-decoration: none; }
+        .result-title a:visited { color: #4c2c92; } /* CCS/GOV.UK-like visited purple */
+        .result-title a:hover { text-decoration: underline; }
+
+        .result-meta {
+            margin: 0 0 14px 0;
+            font-size: 18px;
+            color: #0b0c0c;
+        }
+        .result-meta strong { font-weight: 700; }
+
+        .result-desc { margin: 0; font-size: 20px; line-height: 1.6; }
+
+        /* PERSISTENT SIDEBAR CHAT (same styling as index_v2.html) */
+        #chat-window {
+            display: flex;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: white;
+            border-left: 1px solid #ccc;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .chat-header { background: var(--ccs-blue); color: white; padding: 15px; font-weight: bold; }
+        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 14px; background: #fafafa; }
+
+        .download-btn {
+            background: #f3f2f1; border: 1px solid #bfc1c3; color: #005ea5;
+            padding: 6px 12px; font-size: 12px; font-weight: bold; text-align: left;
+            cursor: pointer; border-radius: 4px; transition: background 0.2s;
+            display: flex; align-items: flex-start; width: 100%;
+            box-sizing: border-box; white-space: normal; word-break: break-all; line-height: 1.4;
+        }
+        .download-btn:hover { background: #005ea5; color: white; }
+
+        .msg, .msg-bot, .msg-user {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            max-width: 90%;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <div class="top-nav">
+            <div><span style="background:#b9d2e8; color:#090b10; padding:2px 5px;">beta</span> Help us make this service better. <u>Give feedback</u></div>
+            <div>Public Procurement Gateway: <a href="#">Create account</a> or <a href="#">Sign in</a></div>
+        </div>
+
+        <header style="background-color: #8fb3ff; padding: 10px 20px;">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo2.png') }}" alt="Logo">
+            </div>
+            <nav>
+                <ul>
+                    <li>Products and suppliers ▾</li>
+                    <li>For buyers ▾</li>
+                    <li>For suppliers ▾</li>
+                    <li>About ▾</li>
+                    <li>News ▾</li>
+                </ul>
+            </nav>
+        </header>
+
+        <section class="content">
+            <div class="wrap">
+                <ol class="breadcrumbs">
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li>Search agreements</li>
+                </ol>
+
+                <h1>Search agreements</h1>
+
+                <div class="search-grid">
+                    <aside class="filters" aria-label="Apply filters (non-functional demo)">
+                        <h2>Apply filters</h2>
+                        <div class="actions">
+                            <button type="button" disabled>Clear filters</button>
+                            <button type="button" disabled>Filter</button>
+                        </div>
+
+                        <div class="filter-section">
+                            <h3>Filter by agreement status</h3>
+                            <label class="filter-option">
+                                <input type="checkbox" disabled>
+                                <span>Live</span>
+                            </label>
+                            <label class="filter-option">
+                                <input type="checkbox" disabled>
+                                <span>Expired</span>
+                            </label>
+                        </div>
+
+                        <div class="filter-section">
+                            <h3>Upcoming agreements</h3>
+                            <p class="filter-help">
+                                View our upcoming agreement page for agreements that are being developed and are not yet live.
+                            </p>
+                            <a class="filter-link" href="#" aria-disabled="true">View upcoming agreements</a>
+                        </div>
+
+                        <div class="filter-section">
+                            <h3>Regulation</h3>
+                            <select class="filter-select" disabled>
+                                <option>View all</option>
+                                <option>PA2023</option>
+                                <option>PCR2015</option>
+                                <option>PCR2006</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-section">
+                            <h3>Agreement type</h3>
+                            <select class="filter-select" disabled>
+                                <option>View all</option>
+                                <option>Dynamic Purchasing System</option>
+                                <option>Dynamic Market</option>
+                                <option>Open Framework</option>
+                                <option>Closed Framework</option>
+                                <option>PCR15 Framework</option>
+                                <option>PCR06 Framework</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-section">
+                            <h3>Browse by category</h3>
+                            <select class="filter-select" disabled>
+                                <option>View all</option>
+                                <option>Corporate</option>
+                                <option>Financial Services</option>
+                                <option>Fleet</option>
+                                <option>HR and Workforce Services</option>
+                                <option>Outsourced Services</option>
+                                <option>Professional Services</option>
+                                <option>Travel, Accommodation and Venues</option>
+                                <option>Estates</option>
+                                <option>Construction</option>
+                                <option>Energy</option>
+                                <option>Facilities Management</option>
+                                <option>Technology</option>
+                                <option>Cloud and Hosting</option>
+                                <option>Digital and Technology Services</option>
+                                <option>Network Services</option>
+                                <option>Software</option>
+                                <option>Hardware</option>
+                            </select>
+                        </div>
+                    </aside>
+
+                    <main>
+                        <div class="results-count">{{ agreements | length }} agreements found</div>
+
+                        {% for a in agreements %}
+                            <div class="result-item">
+                                <h3 class="result-title">
+                                    <a href="{{ url_for('agreement', rm_number=a.rm_number) }}">{{ a.title }}</a>
+                                </h3>
+                                <p class="result-meta">
+                                    <strong>Agreement ID:</strong> {{ a.rm_number }}
+                                    &nbsp;&nbsp;<strong>Start Date:</strong> {{ a.start_date }}
+                                    &nbsp;&nbsp;<strong>Regulation:</strong> {{ a.regulation }}
+                                </p>
+                                <p class="result-desc">{{ a.summary }}</p>
+                            </div>
+                        {% endfor %}
+                    </main>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="chat-window">
+        <div class="chat-header">CCS Assistant</div>
+        <div id="chat-messages">
+            <div style="background: #f3f2f1; padding: 10px; border-radius: 8px; align-self: flex-start;">
+                Hello! I am your web guide. How can I help you today?
+            </div>
+        </div>
+        <div style="padding: 15px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="chat-input" placeholder="Ask about CCS frameworks..." style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <button onclick="sendQuery()" style="background: #00703c; color: white; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px;">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const API_URL = document.querySelector('meta[name="api-url"]').content;
+        const DOWNLOAD_URL = document.querySelector('meta[name="download-url"]').content;
+
+        async function downloadSource(fileName) {
+            try {
+                const response = await fetch(`${DOWNLOAD_URL}/${encodeURIComponent(fileName)}`);
+                const data = await response.json();
+                const hiddenLink = document.createElement('a');
+                hiddenLink.href = data.download_url;
+                hiddenLink.setAttribute('download', fileName);
+                document.body.appendChild(hiddenLink);
+                hiddenLink.click();
+                document.body.removeChild(hiddenLink);
+            } catch (error) {
+                console.error("Download Error:", error);
+            }
+        }
+
+        async function sendQuery() {
+            const query = chatInput.value.trim();
+            if (!query) return;
+
+            appendMessage(query, 'user');
+            chatInput.value = '';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: "{{ user_id }}",
+                        query: query
+                    })
+                });
+
+                const data = await response.json();
+                let responseHTML = `<div class="msg-content">${data.AI_response}</div>`;
+
+                if (data.source_content && data.source_content.length > 0) {
+                    responseHTML += `
+                        <div style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                            <p style="font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px;">SOURCES:</p>
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                ${data.source_content.map(source => `
+                                    <button onclick="downloadSource('${source}')" class="download-btn">📥 ${source}</button>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                }
+
+                appendMessage(responseHTML, 'bot');
+            } catch (error) {
+                appendMessage("Error connecting to AI service.", 'bot');
+            }
+        }
+
+        function appendMessage(content, sender) {
+            const msg = document.createElement('div');
+            msg.style.padding = "10px";
+            msg.style.borderRadius = "8px";
+            msg.style.maxWidth = "85%";
+
+            msg.style.overflowWrap = "break-word";
+            msg.style.wordBreak = "break-word";
+
+            if (sender === 'user') {
+                msg.style.background = "#005ea5";
+                msg.style.color = "white";
+                msg.style.alignSelf = "flex-end";
+                msg.textContent = content;
+            } else {
+                msg.style.background = "#f3f2f1";
+                msg.style.alignSelf = "flex-start";
+                msg.innerHTML = content;
+            }
+
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Results list is server-rendered from the CSV. Sidebar chat remains interactive.
+    </script>
+</body>
+</html>
+
