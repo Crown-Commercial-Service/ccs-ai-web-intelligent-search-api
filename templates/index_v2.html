@@ -43,8 +43,27 @@
         .hero { background-color:#8fb3ff; padding: 60px 5%; display: flex; justify-content: space-between; align-items: center; }
         .hero-content { max-width: 500px; }
         .search-boxes { display: flex; gap: 20px; }
-        .search-card { background: rgba(255,255,255,0.25); padding: 20px; width: 380px; border-radius: 6px; }
-        .search-title { font-size: 28px; font-weight: 700; text-decoration: underline; text-underline-offset: 6px; }
+        .search-card {
+            background: rgba(255,255,255,0.25);
+            padding: 40px;
+            margin: 10px;
+            width: 300px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Ensure both cards reserve the same title height so inputs align */
+        .search-title {
+            font-size: 28px;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 6px;
+            line-height: 1.1;
+            min-height: 64px; /* ~2 lines at this font size */
+            display: block;
+            margin: 0;
+        }
 
         .search-form {
             margin-top: 12px;
@@ -58,6 +77,7 @@
 
         .search-form input[type="text"] {
             flex: 1;
+            min-width: 0; /* allow input to shrink so the icon button never disappears */
             border: 0;
             outline: none;
             padding: 10px 12px;
@@ -66,6 +86,7 @@
 
         .search-form button {
             width: 64px;
+            flex: 0 0 64px; /* prevent flexbox from shrinking the button to 0 */
             border: 0;
             cursor: pointer;
             background: #b5c327; /* green block */
