@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="api-url" content="{{ api_url }}">
     <meta name="download-url" content="{{ download_url }}">
+    <meta name="user-id" content="{{ user_id }}">
     <title>Crown Commercial Service - Full Page</title>
     <style>
         :root {
@@ -296,97 +297,7 @@
         </footer>
     </div>
 
-    <div id="chat-window">
-        <div class="chat-header">CCS Assistant</div>
-        <div id="chat-messages">
-            <div style="background: #f3f2f1; padding: 10px; border-radius: 8px; align-self: flex-start;">
-                Hello! I am your web guide. How can I help you today?
-            </div>
-        </div>
-        <div style="padding: 15px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 8px;">
-            <input type="text" id="chat-input" placeholder="Ask about CCS frameworks..." style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <button onclick="sendQuery()" style="background: #00703c; color: white; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px;">Send</button>
-        </div>
-    </div>
-
-    <script>
-        const chatMessages = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-        const API_URL = document.querySelector('meta[name="api-url"]').content;
-        const DOWNLOAD_URL = document.querySelector('meta[name="download-url"]').content;
-        async function downloadSource(fileName) {
-            try {
-                const response = await fetch(`${DOWNLOAD_URL}/${encodeURIComponent(fileName)}`);
-                const data = await response.json();
-                const hiddenLink = document.createElement('a');
-                hiddenLink.href = data.download_url;
-                hiddenLink.setAttribute('download', fileName);
-                document.body.appendChild(hiddenLink);
-                hiddenLink.click();
-                document.body.removeChild(hiddenLink);
-            } catch (error) {
-                console.error("Download Error:", error);
-            }
-        }
-
-        async function sendQuery() {
-            const query = chatInput.value.trim();
-            if (!query) return;
-
-            appendMessage(query, 'user');
-            chatInput.value = '';
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: "{{ user_id }}",
-                        query: query
-                    })
-                });
-
-                const data = await response.json();
-                let responseHTML = `<div class="msg-content">${data.AI_response}</div>`;
-
-                if (data.source_content && data.source_content.length > 0) {
-                    responseHTML += `
-                        <div style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
-                            <p style="font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px;">SOURCES:</p>
-                            <div style="display: flex; flex-direction: column; gap: 5px;">
-                                ${data.source_content.map(source => `
-                                    <button onclick="downloadSource('${source}')" class="download-btn">📥 ${source}</button>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                }
-                appendMessage(responseHTML, 'bot');
-            } catch (error) {
-                appendMessage("Error connecting to AI service.", 'bot');
-            }
-        }
-
-        function appendMessage(content, sender) {
-            const msg = document.createElement('div');
-            msg.style.padding = "10px";
-            msg.style.borderRadius = "8px";
-            msg.style.maxWidth = "85%";
-
-            msg.style.overflowWrap = "break-word";
-            msg.style.wordBreak = "break-word";
-
-            if (sender === 'user') {
-                msg.style.background = "#005ea5";
-                msg.style.color = "white";
-                msg.style.alignSelf = "flex-end";
-                msg.textContent = content;
-            } else {
-                msg.style.background = "#f3f2f1";
-                msg.style.alignSelf = "flex-start";
-                msg.innerHTML = content;
-            }
-            chatMessages.appendChild(msg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    </script>
+    {% include 'partials/chat_sidebar.html' %}
+    <script src="{{ url_for('static', filename='ccs_chat.js') }}" defer></script>
 </body>
 </html>
