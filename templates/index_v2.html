@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-url" content="{{ api_url }}">
+    <meta name="download-url" content="{{ download_url }}">
+    <meta name="user-id" content="{{ user_id }}">
     <title>Crown Commercial Service - Full Page</title>
     <style>
         :root {
@@ -41,8 +44,77 @@
         .hero { background-color:#8fb3ff; padding: 60px 5%; display: flex; justify-content: space-between; align-items: center; }
         .hero-content { max-width: 500px; }
         .search-boxes { display: flex; gap: 20px; }
-        .search-card { background: rgba(255,255,255,0.4); padding: 20px; width: 220px; }
-        .search-card input { width: 90%; padding: 8px; border: 1px solid #000; margin-top: 10px; }
+        .search-card {
+            background: rgba(255,255,255,0.25);
+            padding: 40px;
+            margin: 10px;
+            width: 300px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Ensure both cards reserve the same title height so inputs align */
+        .search-title {
+            font-size: 28px;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 6px;
+            line-height: 1.1;
+            min-height: 64px; /* ~2 lines at this font size */
+            display: block;
+            margin: 0;
+        }
+
+        .search-form {
+            margin-top: 12px;
+            display: flex;
+            align-items: stretch;
+            border: 3px solid #ffdd00; /* yellow border */
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .search-form input[type="text"] {
+            flex: 1;
+            min-width: 0; /* allow input to shrink so the icon button never disappears */
+            border: 0;
+            outline: none;
+            padding: 10px 12px;
+            font-size: 16px;
+        }
+
+        .search-form button {
+            width: 64px;
+            flex: 0 0 64px; /* prevent flexbox from shrinking the button to 0 */
+            border: 0;
+            cursor: pointer;
+            background: #b5c327; /* green block */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-form button:hover { filter: brightness(0.95); }
+
+        .search-form button svg {
+            width: 24px;
+            height: 24px;
+            fill: #0b0c0c;
+        }
+
+        /* Disabled variant (keeps layout identical, just non-interactive) */
+        .search-form.is-disabled {
+            opacity: 0.75;
+        }
+        .search-form.is-disabled input,
+        .search-form.is-disabled button {
+            cursor: not-allowed;
+        }
+        .search-form.is-disabled button {
+            filter: grayscale(20%);
+        }
 
         /* Info & News Sections */
         .info-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 50px 5%; }
@@ -130,8 +202,28 @@
                 <p><a href="#">Find out how we help the UK public sector achieve value for the nation in our digital brochure.</a></p>
             </div>
             <div class="search-boxes">
-                <div class="search-card"><strong>Search agreements</strong><input type="text"></div>
-                <div class="search-card"><strong>Search suppliers</strong><input type="text"></div>
+                <div class="search-card">
+                    <div class="search-title">Search agreements</div>
+                    <form class="search-form" action="{{ url_for('results') }}" method="get">
+                        <input type="text" name="q" aria-label="Search agreements" />
+                        <button type="submit" aria-label="Search">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M10 4a6 6 0 1 1 0 12A6 6 0 0 1 10 4m0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                <div class="search-card">
+                    <div class="search-title">Search suppliers</div>
+                    <form class="search-form is-disabled" onsubmit="return false;">
+                        <input type="text" aria-label="Search suppliers (coming soon)" placeholder="Coming soon" disabled />
+                        <button type="button" aria-label="Search (coming soon)" disabled>
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M10 4a6 6 0 1 1 0 12A6 6 0 0 1 10 4m0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
 
@@ -205,97 +297,7 @@
         </footer>
     </div>
 
-    <div id="chat-window">
-        <div class="chat-header">CCS Assistant</div>
-        <div id="chat-messages">
-            <div style="background: #f3f2f1; padding: 10px; border-radius: 8px; align-self: flex-start;">
-                Hello! I am your web guide. How can I help you today?
-            </div>
-        </div>
-        <div style="padding: 15px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 8px;">
-            <input type="text" id="chat-input" placeholder="Ask about CCS frameworks..." style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <button onclick="sendQuery()" style="background: #00703c; color: white; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px;">Send</button>
-        </div>
-    </div>
-
-    <script>
-        const chatMessages = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-        const DOWNLOAD_URL = {{ download_url | tojson }};
-        async function downloadSource(fileName) {
-            try {
-                const response = await fetch(`${DOWNLOAD_URL}/${encodeURIComponent(fileName)}`);
-                const data = await response.json();
-                const hiddenLink = document.createElement('a');
-                hiddenLink.href = data.download_url;
-                hiddenLink.setAttribute('download', fileName);
-                document.body.appendChild(hiddenLink);
-                hiddenLink.click();
-                document.body.removeChild(hiddenLink);
-            } catch (error) {
-                console.error("Download Error:", error);
-            }
-        }
-
-        async function sendQuery() {
-            const query = chatInput.value.trim();
-            if (!query) return;
-
-            appendMessage(query, 'user');
-            chatInput.value = '';
-            const API_URL = {{ api_url | tojson }};
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: "{{ user_id }}",
-                        query: query
-                    })
-                });
-
-                const data = await response.json();
-                let responseHTML = `<div class="msg-content">${data.AI_response}</div>`;
-
-                if (data.source_content && data.source_content.length > 0) {
-                    responseHTML += `
-                        <div style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
-                            <p style="font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px;">SOURCES:</p>
-                            <div style="display: flex; flex-direction: column; gap: 5px;">
-                                ${data.source_content.map(source => `
-                                    <button onclick="downloadSource('${source}')" class="download-btn">📥 ${source}</button>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                }
-                appendMessage(responseHTML, 'bot');
-            } catch (error) {
-                appendMessage("Error connecting to AI service.", 'bot');
-            }
-        }
-
-        function appendMessage(content, sender) {
-            const msg = document.createElement('div');
-            msg.style.padding = "10px";
-            msg.style.borderRadius = "8px";
-            msg.style.maxWidth = "85%";
-
-            msg.style.overflowWrap = "break-word";
-            msg.style.wordBreak = "break-word";
-
-            if (sender === 'user') {
-                msg.style.background = "#005ea5";
-                msg.style.color = "white";
-                msg.style.alignSelf = "flex-end";
-                msg.textContent = content;
-            } else {
-                msg.style.background = "#f3f2f1";
-                msg.style.alignSelf = "flex-start";
-                msg.innerHTML = content;
-            }
-            chatMessages.appendChild(msg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    </script>
+    {% include 'partials/chat_sidebar.html' %}
+    <script src="{{ url_for('static', filename='ccs_chat.js') }}" defer></script>
 </body>
 </html>
