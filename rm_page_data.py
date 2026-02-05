@@ -39,10 +39,10 @@ def unzipper_v2(data, rm_number):
     return extract_recursive(zip_stream, base_dir, rm_number)
 
 
-def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.odt', '.docx', '.xlsx', 'pdf'),
+def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.odt', '.docx', '.xlsx', '.pdf'),
                       excluded_filenames=['mimetype', '.DS_Store', 'thumbs.db']):
     unzipped_files = []
-
+    allowed_filetypes = ('.odt', '.docx', '.xlsx', '.pdf', ".csv", ".txt")
     with zipfile.ZipFile(zip_input, 'r') as zip_ref:
         zip_ref.extractall(path=extract_to)
 
@@ -62,7 +62,7 @@ def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.od
 
             # 2. Handle Valid Files
 
-        elif item.suffix not in [".xml", ".rdf", ".DS_Store", ".jpg", ".png"] and  item.name.lower() not in excluded_filenames:
+        elif item.suffix in allowed_filetypes and  item.name.lower() not in excluded_filenames:
             # ^RM\d+ matches RM + digits at the start. [_ ]* matches any underscores or spaces following.
             clean_name = re.sub(r'^RM\d+[_ ]*', '', item.name, flags=re.IGNORECASE)
 
