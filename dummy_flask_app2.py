@@ -11,7 +11,6 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default-dev-key-123')
 app.config.update(
-    SESSION_COOKIE_SECURE=True,   # Tells browser to only send cookie over HTTPS
     SESSION_COOKIE_HTTPONLY=True, # Prevents scripts from stealing the session
     SESSION_COOKIE_SAMESITE='Lax',# Required by modern browsers to allow redirects
 )
