@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default-dev-key-123')
 api_url = os.getenv('WEBSEARCH_API_URL')
 download_url = os.getenv('DOWNLOAD_SOURCE_URL')
 CSV_PATH = os.path.join(os.path.dirname(__file__), "website_agreement_data2.csv")
