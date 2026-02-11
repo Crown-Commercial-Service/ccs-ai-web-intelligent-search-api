@@ -111,6 +111,25 @@
       }
     }
 
+    function formatAIResponse(text) {
+      if (!text) return "";
+
+      return text
+        //  Handle Bold (**text**)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+
+        //  Handle Lists
+
+        .replace(/((?:^[ \t]*[*+-][ \t]+.*(?:\n|$))+)/gm, function(match) {
+          return '<ul>' + match.replace(/^[ \t]*[*+-][ \t]+(.*)(?:\n|$)/gm, '<li>$1</li>') + '</ul>';
+        })
+
+        //  Handle Remaining Line Breaks
+        // trim to avoid trailing empty breaks and convert \n to <br>
+        .trim()
+        .replace(/\n/g, '<br>');
+    }
+
     async function sendQuery() {
       const query = (chatInput.value || "").trim();
       if (!query) return;
@@ -131,7 +150,8 @@
         });
 
         const data = await resp.json();
-        let responseHTML = `<div class="msg-content">${data.AI_response}</div>`;
+        const formattedBody = formatAIResponse(data.AI_response);
+        let responseHTML = `<div class="msg-content">${formattedBody}</div>`;
 
         if (data.source_content && data.source_content.length > 0) {
           responseHTML += `
