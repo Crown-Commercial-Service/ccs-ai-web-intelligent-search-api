@@ -13,7 +13,7 @@ import time
 load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 
-# ccs_frameworks = ccs_frameworks[4:10]
+ccs_frameworks = ccs_frameworks[0:3]
 
 
 #get df and loop through all titles and download files into blob storage so it can be used for RAG
@@ -167,6 +167,9 @@ def get_rm_page_data():
 
                     # zip_checker needs to be careful not to exhaust RAM
                     is_zip = zip_checker(data_url, response)
+                    blob_metadata = {
+                        "rm_number": frame_work
+                    }
 
                     if not is_zip:
                         original_name = Path(data_url).name
@@ -179,7 +182,7 @@ def get_rm_page_data():
                         #     blob_name=azure_file_name
                         # )
                         blob_client = container_client.get_blob_client(azure_file_name)
-                        blob_client.upload_blob(data=response.content, overwrite=True)
+                        blob_client.upload_blob(data=response.content, overwrite=True, metadata=blob_metadata)
 
                     else:
                         # Pass the specific temp dir to unzipper
@@ -192,7 +195,7 @@ def get_rm_page_data():
                             # )
                             blob_client = container_client.get_blob_client(unzipped_file.name)
                             with open(unzipped_file, "rb") as file:
-                                blob_client.upload_blob(data=file, overwrite=True)
+                                blob_client.upload_blob(data=file, overwrite=True, metadata=blob_metadata)
 
                 except Exception as e:
                     print(f"Error processing {doc.get('title')}: {e}")

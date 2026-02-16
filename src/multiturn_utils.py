@@ -8,6 +8,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from typing import TypedDict, Annotated, List, Any, Iterator, Dict, Union
+from langchain_core.runnables import RunnableConfig
 
 class AgentState(TypedDict):
     """The state of the agent, containing the conversation history."""
@@ -23,9 +24,15 @@ def query_or_respond(state: MessagesState, llm: Any, retrieve_tool: Any):
 def create_bound_retrieve_tool(vector_store):
     """Create a properly decorated retrieve tool bound to a specific vector store"""
     @tool(response_format="content_and_artifact")
-    def retrieve_bound(query: str):
+    def retrieve_bound(query: str, config: RunnableConfig):
         """Retrieve information related to a query"""
-        retrieved_docs = vector_store.similarity_search(query, k=5)
+        rm_filter = config["configurable"].get("rm_filter")
+        print(f"rm_filter: {rm_filter}")
+        if rm_filter is not None and rm_filter != "UNKNOWN":
+            search_filter = f"rm_number eq '{rm_filter}'"
+        else:
+            search_filter = None
+        retrieved_docs = vector_store.similarity_search(query, k=5, filters=search_filter)
         serialized = "\n\n".join(
             f"Source: {doc.metadata}\nContent: {doc.page_content}"
             for doc in retrieved_docs
