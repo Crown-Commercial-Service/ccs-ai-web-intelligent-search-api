@@ -71,7 +71,10 @@ checkpointer = CosmosDBSaver(
 #This is to be used to help pydantic ai model categorise user's query
 
 rm_descriptions = "\n".join([
-    f"{r.rm_number}: {r.description if r.description and str(r.description).strip() else r.category}"
+    f"RM: {r.rm_number} | "
+    f"Keywords: {r.keywords if 'keywords' in r and str(r.keywords).strip() else 'N/A'} | "
+    f"Summary: {r.summary} | "
+    f"Pillar: {r.pillar} ({r.category})"
     for _, r in ccs_frameworks.iterrows()
 ])
 
@@ -91,22 +94,35 @@ class SearchQuery(BaseModel):
 
 @app.post("/results")
 async def ai_search_api(query: SearchQuery):
-    # get RM label from user's query
-    try:
-        rm_label_result = await run_rm_labeller(pydantic_rm_labeller_model, rm_descriptions, query.query)
-        rm_label = rm_label_result.rm_number
-        reasoning = rm_label_result.reasoning
-        print(f"PydanticAI selected {rm_label} because: {reasoning}")
-    except Exception as e:
-        print(f"Labelling failed: {e}")
-        rm_label = "UNKNOWN"
-
-    # store past query in cosmodb and pull it out for llm based on user_id which done in checkpointer
 
     # give it to LLM
     if query.user_id not in graphs:
         graphs[query.user_id] = build_graph(llm=llm, vector_store=vector_store, checkpointer=checkpointer)
     graph = graphs[query.user_id]
+
+    history_config = {"configurable": {"thread_id": query.user_id}}
+    # 2. Get the last known label from CosmosDB
+    state = graph.get_state(history_config)
+    # We use .get() twice: once for the state values dict, once for the key
+    last_known_rm = state.values.get("last_rm_label", "UNKNOWN") if state.values else "UNKNOWN"
+
+    # get RM label from user's query
+    try:
+        rm_label_result = await run_rm_labeller(pydantic_rm_labeller_model, rm_descriptions, query.query)
+
+        rm_label = rm_label_result.rm_number
+        if rm_label == "UNKNOWN":
+            print("last known rm:", last_known_rm)
+            rm_label = last_known_rm
+        reasoning = rm_label_result.reasoning
+        print(f"PydanticAI selected {rm_label} because: {reasoning}")
+    except Exception as e:
+        print(f"Labelling failed: {e}")
+        rm_label = last_known_rm
+
+    graph.update_state(history_config, {"last_rm_label": rm_label})
+    # store past query in cosmodb and pull it out for llm based on user_id which done in checkpointer
+
 
     config = {"configurable": {"thread_id": query.user_id, "rm_filter": rm_label}}
     # answer_once(graph=graph, user_input=query.query,config=config,thread_id=query.user_id)
