@@ -1,7 +1,9 @@
 .env
 unzipped_data
 .idea
- __pycache__/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
 agreements_data_csv.py
-src/__pycache__/
 website_agreement_data.csv
