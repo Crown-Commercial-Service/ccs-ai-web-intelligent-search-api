@@ -94,19 +94,24 @@ class SearchQuery(BaseModel):
 
 @app.post("/results")
 async def ai_search_api(query: SearchQuery):
+    """ This function uses a LLM to answer user's query
 
-    # give it to LLM
+    :param query (Pydantic): data model(class) to answer query per user user
+    :return dictionary: containing AI's response
+    """
+
+    # create langchain graph to orchestrate LLM actions
     if query.user_id not in graphs:
         graphs[query.user_id] = build_graph(llm=llm, vector_store=vector_store, checkpointer=checkpointer)
     graph = graphs[query.user_id]
-
+    # prepare data to check for a user id what was their last rm number for filtering
     history_config = {"configurable": {"thread_id": query.user_id}}
-    # 2. Get the last known label from CosmosDB
+
     state = graph.get_state(history_config)
-    # We use .get() twice: once for the state values dict, once for the key
+
     last_known_rm = state.values.get("last_rm_label", "UNKNOWN") if state.values else "UNKNOWN"
 
-    # get RM label from user's query
+    # get RM label(e.g RM6200) from user's query if the label returns unknown it means it is likely a follow question
     try:
         rm_label_result = await run_rm_labeller(pydantic_rm_labeller_model, rm_descriptions, query.query)
 
@@ -119,13 +124,12 @@ async def ai_search_api(query: SearchQuery):
     except Exception as e:
         print(f"Labelling failed: {e}")
         rm_label = last_known_rm
-
+    # Keep the last rm label updated
     graph.update_state(history_config, {"last_rm_label": rm_label})
-    # store past query in cosmodb and pull it out for llm based on user_id which done in checkpointer
+
 
 
     config = {"configurable": {"thread_id": query.user_id, "rm_filter": rm_label}}
-    # answer_once(graph=graph, user_input=query.query,config=config,thread_id=query.user_id)
     response = answer_once(graph=graph, user_input=query.query,config=config,thread_id=query.user_id)
     print(f"user: {query.query}")
     print()
@@ -133,13 +137,18 @@ async def ai_search_api(query: SearchQuery):
     print()
     print(f"links below:\n {response["source_names"]}")
     sources = list(set(response["source_names"]))
-    #todo download the sources
+    # return AI response with sources if there is any
     return {"AI_response":response["answer"], "source_content":sources}
 
 
 @app.get("/get_download_url/{file_name}")
 async def get_download_url(file_name: str):
-    # Setup credentials (ensure these are in your .env)
+    """ Downloads files from storage that has been retrieved by LLM
+
+    :param file_name(str): name of file to be downloaded from blob
+    :return dictionary: Download URL
+    """
+    # Setup credentials
     account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
     account_key = os.getenv('AZURE_STORAGE_KEY')
     container_name = os.getenv('BLOB_CONTAINER_NAME')
