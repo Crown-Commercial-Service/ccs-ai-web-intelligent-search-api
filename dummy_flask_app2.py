@@ -6,7 +6,11 @@ import ast
 from flask import Flask, render_template, session, request, redirect, url_for
 from dotenv import load_dotenv
 
-load_dotenv()
+# Treat .env as optional (e.g. in CI/sandbox environments it may not exist / be readable).
+try:
+    load_dotenv()
+except Exception:
+    pass
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default-dev-key-123')
