@@ -1,7 +1,7 @@
 from typing import Any, Iterator, Dict
-from functools import partial, wraps, WRAPPER_ASSIGNMENTS
+from functools import partial
 from langchain_core.tools import tool
-from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
+from langchain_core.messages import SystemMessage, BaseMessage
 from langchain_core.documents.base import Document
 from langgraph.graph import MessagesState, StateGraph, END
 from langgraph.graph.message import add_messages
@@ -175,7 +175,7 @@ def answer_once(
 def build_graph(llm, vector_store, checkpointer):
     # create a properly decorated tool bound to the vector store
     retrieve_bound = create_bound_retrieve_tool(vector_store)
-    
+
     # bind llm and retrieve_tool into the nodes that need them
     query_node = partial(query_or_respond, llm=llm, retrieve_tool=retrieve_bound)
     generate_node = partial(generate, llm=llm)
@@ -223,6 +223,6 @@ def format_sources(source_names, CI_docs_URLs):
     # Create formatted source block for expander
     sources_content = f"**Most Relevant Document:**\n- {source_links[0]}"
     if len(source_links) > 1:
-        sources_content += f"\n\n**Other Related Documents:**\n" + "\n".join(f"- {link}" for link in source_links[1:])
+        sources_content += "\n\n**Other Related Documents:**\n" + "\n".join(f"- {link}" for link in source_links[1:])
 
     return sources_content
