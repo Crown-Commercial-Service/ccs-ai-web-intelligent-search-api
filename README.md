@@ -126,6 +126,6 @@ run these commands to use api only :
     TEST_ACCESS_KEY `
 
 run `dummy_flask_app2.py` providing if you using the deployed version of this app that is on azure if you do not have this then you must
-also the commands for the api only instructions and add the local host url for `WEBSEARCH_API_URL` and `DOWNLOAD_SOURCE_URL`. `TEST_ACCESS_KEY ` can be anything if
+also do the commands for the api only instructions(follow only step 1) and add the local host url for `WEBSEARCH_API_URL` and `DOWNLOAD_SOURCE_URL`. `TEST_ACCESS_KEY ` can be anything if
 you are working locally but if you want to use the deployed version of the app you must contact the AI team for that.
 
