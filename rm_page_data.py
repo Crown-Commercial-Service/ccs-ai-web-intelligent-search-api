@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from ccs_website_data import  fetch_all_ccs_frameworks
 import requests
-from azure.storage.blob import BlobClient, ContainerClient, ExponentialRetry
+from azure.storage.blob import ContainerClient, ExponentialRetry
 from pathlib import Path
 import zipfile
 import io
@@ -14,7 +14,7 @@ load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 
 ccs_frameworks = ccs_frameworks[0:3]
-
+allowed_filetypes = ('.odt', '.docx', '.pdf', ".txt")
 
 #get df and loop through all titles and download files into blob storage so it can be used for RAG
 base_url = os.getenv("BASE_URL")
@@ -42,7 +42,6 @@ def unzipper_v2(data, rm_number):
 def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.odt', '.docx', '.xlsx', '.pdf'),
                       excluded_filenames=['mimetype', '.DS_Store', 'thumbs.db']):
     unzipped_files = []
-    allowed_filetypes = ('.odt', '.docx', '.xlsx', '.pdf', ".csv", ".txt")
     with zipfile.ZipFile(zip_input, 'r') as zip_ref:
         zip_ref.extractall(path=extract_to)
 
@@ -79,49 +78,9 @@ def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.od
             except FileNotFoundError:
                 if new_path.exists():
                     unzipped_files.append(new_path)
-            # --- THE FIX ENDS HERE ---
 
     return unzipped_files
 
-# def extract_recursive_old(zip_input, extract_to, rm_number, excluded_extension=('.odt', '.docx', '.xlsx', 'pdf'), excluded_filenames = ['mimetype', '.DS_Store', 'thumbs.db']):
-#     unzipped_files = []
-#     with zipfile.ZipFile(zip_input, 'r') as zip_ref:
-#         zip_ref.extractall(path=extract_to)
-#
-#     # Get a list of items inside 'unzipped_data'
-#     extracted_items = list(extract_to.iterdir())
-#
-#     # If there is exactly one item and it's a directory, move our 'target' inside it
-#     if len(extracted_items) == 1 and extracted_items[0].is_dir():
-#         target_dir = extracted_items[0]
-#     else:
-#         target_dir = extract_to
-#
-#     for item in target_dir.iterdir():
-#         print(item)
-#         if item.is_file() and zipfile.is_zipfile(item) and item.suffix not in excluded_extension:
-#             nested_dir = item.with_suffix('')
-#             nested_dir.mkdir(exist_ok=True)
-#             unzipped_files.extend(extract_recursive(zip_input=item, extract_to=nested_dir,rm_number=rm_number))
-#             # Remove the nested .zip file after extraction
-#             item.unlink()
-#         elif item.is_file() and item.suffix != ".xml" and item.suffix != ".rdf" and item.name.lower() not in excluded_filenames:
-#             new_name = f"{rm_number}_{item.name}"
-#             new_path = item.with_name(new_name)
-#             try:
-#                 # Only rename if it hasn't been renamed already
-#                 if not item.name.startswith(f"{rm_number}_"):
-#                     item.rename(new_path)
-#                     unzipped_files.append(new_path)
-#                 else:
-#                     unzipped_files.append(item)
-#             except FileNotFoundError:
-#                 # If it's already gone or moved, skip it
-#                 print(f"Skipping: {item.name} (already moved or missing)")
-#             # item.rename(new_path)
-#             # unzipped_files.append(new_path)
-#
-#     return unzipped_files
 
 
 
@@ -172,27 +131,20 @@ def get_rm_page_data():
                     }
 
                     if not is_zip:
-                        original_name = Path(data_url).name
-                        # Fixed the logic check here
-                        azure_file_name = original_name if frame_work in original_name else f"{frame_work}_{original_name}"
+                        # only allow  pdfs, docs and txt
+                        if Path(data_url).suffix in allowed_filetypes:
+                            original_name = Path(data_url).name
 
-                        # blob_client = BlobClient.from_connection_string(
-                        #     conn_str=os.getenv("BLOB_CONNECTION_STRING"),
-                        #     container_name=os.getenv("BLOB_CONTAINER_NAME"),
-                        #     blob_name=azure_file_name
-                        # )
-                        blob_client = container_client.get_blob_client(azure_file_name)
-                        blob_client.upload_blob(data=response.content, overwrite=True, metadata=blob_metadata)
+                            azure_file_name = original_name if frame_work in original_name else f"{frame_work}_{original_name}"
+
+                            blob_client = container_client.get_blob_client(azure_file_name)
+                            blob_client.upload_blob(data=response.content, overwrite=True, metadata=blob_metadata)
 
                     else:
                         # Pass the specific temp dir to unzipper
                         data_to_unzip = unzipper_v2(response, frame_work)
                         for unzipped_file in data_to_unzip:
-                            # blob_client = BlobClient.from_connection_string(
-                            #     conn_str=os.getenv("BLOB_CONNECTION_STRING"),
-                            #     container_name=os.getenv("BLOB_CONTAINER_NAME"),
-                            #     blob_name=unzipped_file.name  # Name already has RM_ prefix from unzipper
-                            # )
+
                             blob_client = container_client.get_blob_client(unzipped_file.name)
                             with open(unzipped_file, "rb") as file:
                                 blob_client.upload_blob(data=file, overwrite=True, metadata=blob_metadata)
@@ -204,60 +156,6 @@ def get_rm_page_data():
             # Cleanup AFTER all documents for this RM are done
             if rm_temp_dir.exists():
                 shutil.rmtree(rm_temp_dir)
-
-
-# def get_rm_page_data_old():
-#     for index, row  in ccs_frameworks.iterrows():
-#         frame_work = row["rm_number"]
-#         print(f"position:{index} frame_work:{frame_work}")
-#         documents = agreement_docs(frame_work)
-#
-#         if not documents:
-#             continue
-#         for doc in documents:
-#             try:
-#                 print(doc["title"], doc["url"])
-#                 data_url = doc["url"]
-#                 response = requests.get(data_url, stream=True)
-#                 is_zip = zip_checker(data_url, response)
-#                 if is_zip is False:
-#
-#                     azure_file_name = Path(data_url).name
-#                     # if frame_work not in azure_file_name is False or frame_work.lower() not in azure_file_name is False:
-#                     if frame_work not in azure_file_name and frame_work.lower() not in azure_file_name:
-#                         azure_file_name = f"{frame_work}_{azure_file_name}"
-#
-#                     blob_client = BlobClient.from_connection_string(
-#                         conn_str=os.getenv("BLOB_CONNECTION_STRING"),
-#                         container_name=os.getenv("BLOB_CONTAINER_NAME"),
-#                         blob_name=azure_file_name
-#                     )
-#                     blob_client.upload_blob(data=response.content, overwrite=True
-#                                             )
-#                 if is_zip is True:
-#                     try:
-#                         data_to_unzip = unzipper_v2(response, frame_work)
-#                         for unzipped_file in data_to_unzip:
-#                             azure_file_name = Path(unzipped_file).name
-#                             blob_client = BlobClient.from_connection_string(
-#                                 conn_str=os.getenv("BLOB_CONNECTION_STRING"),
-#                                 container_name=os.getenv("BLOB_CONTAINER_NAME"),
-#                                 blob_name=azure_file_name
-#                             )
-#                             with open(unzipped_file, "rb") as file:
-#                                 blob_client.upload_blob(data=file, overwrite=True
-#                                                         )
-#                     finally:
-#                         unzipped_dir = Path.cwd() / "unzipped_data"
-#                         if unzipped_dir.exists() and unzipped_dir.is_dir():
-#                             print(f"Cleaning up: {unzipped_dir}")
-#
-#                             shutil.rmtree(unzipped_dir)
-#             except Exception as e:
-#
-#                 print(f"This the error that caused the failed download {e}")
-
-
 
 
 
