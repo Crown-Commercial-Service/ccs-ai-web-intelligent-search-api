@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent
+from pydantic_ai import Agent, ModelSettings
 
 class DataFilterer(BaseModel):
     rm_number: str = Field(description="The extracted or inferred RM number.")
@@ -16,6 +16,7 @@ async def run_rm_labeller(model, rm_descriptions, user_input):
     rm_labeller = Agent(
         model=model,
         output_type= DataFilterer,
+        model_settings=ModelSettings(temperature=0.0),
         system_prompt=(
             "You are a Senior Procurement Analyst. You are an expert across 200 government frameworks. "
             "Your task is to map any user query—no matter how technical or niche—to the correct RM number. "
