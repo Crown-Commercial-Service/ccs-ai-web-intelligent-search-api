@@ -4,23 +4,27 @@ import os
 os.environ["AZURESEARCH_FIELDS_CONTENT_VECTOR"] = "text_vector"
 os.environ["AZURESEARCH_FIELDS_CONTENT"] = "chunk"
 from dotenv import load_dotenv
-from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient
 from langchain_community.vectorstores.azuresearch import AzureSearch
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from src.multiturn_utils import build_graph, answer_once
 from langgraph_checkpoint_cosmosdb import CosmosDBSaver
 
 from fastapi import  FastAPI
-import pandas as pd
-import io
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta, timezone
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
+from openai import AsyncAzureOpenAI
+from ai_docs_filterer_for_RAG import run_rm_labeller
+from ccs_website_data import  fetch_all_ccs_frameworks
+
+
 load_dotenv()
 
+ccs_frameworks = fetch_all_ccs_frameworks()
 graphs = {}
 embeddings: AzureOpenAIEmbeddings = AzureOpenAIEmbeddings(
     azure_deployment=os.getenv("EMBEDDING_MODEL_NAME"),
@@ -45,6 +49,18 @@ llm = AzureChatOpenAI(
     api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
     temperature=0.0
 )
+
+pydantic_azure_client = AsyncAzureOpenAI(
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_key=os.getenv("AZURE_OPENAI_KEY"),
+    azure_deployment=os.getenv("DEPLOYMENT_NAME"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+)
+pydantic_rm_labeller_model = OpenAIChatModel(
+    model_name= os.getenv("DEPLOYMENT_NAME"),
+    provider=OpenAIProvider(openai_client=pydantic_azure_client)
+)
+
 COSMOS_DB_NAME = os.getenv("COSMOS_DB_NAME")
 COSMOS_CONTAINER_NAME = os.getenv("COSMOS_CONTAINER_NAME")
 
@@ -52,7 +68,12 @@ checkpointer = CosmosDBSaver(
     database_name=COSMOS_DB_NAME,
     container_name=COSMOS_CONTAINER_NAME
 )
+#This is to be used to help pydantic ai model categorise user's query
 
+rm_descriptions = "\n".join([
+    f"{r.rm_number}: {r.description if r.description and str(r.description).strip() else r.category}"
+    for _, r in ccs_frameworks.iterrows()
+])
 
 app = FastAPI()
 
@@ -67,35 +88,27 @@ class SearchQuery(BaseModel):
     user_id:str
     query:str
 
-def load_files_for_links():
-    try:
-        credential = DefaultAzureCredential()
-        blob_service_client = BlobServiceClient(account_url=os.getenv('BLOB_URL'), credential=credential)
-        container_client = blob_service_client.get_container_client(os.getenv("BLOB_CONFIG_CONTAINER"))
-        blob_client = container_client.get_blob_client("CI_document_URLs.csv")
-        blob_data = blob_client.download_blob()
-        URLS = pd.read_csv(io.BytesIO(blob_data.readall()))
-        URLS = URLS.rename(columns={"FileName": "File Name", "AzureURL": "File URL"})
-        return URLS
-    except Exception as e:
-        print(f"Error loading CSV from Blob Storage: {e}")
-        URLS = pd.DataFrame()  # Create an empty DataFrame on failure
-        return URLS
 
 @app.post("/results")
-def ai_search_api(query: SearchQuery):
+async def ai_search_api(query: SearchQuery):
+    # get RM label from user's query
+    try:
+        rm_label_result = await run_rm_labeller(pydantic_rm_labeller_model, rm_descriptions, query.query)
+        rm_label = rm_label_result.rm_number
+        reasoning = rm_label_result.reasoning
+        print(f"PydanticAI selected {rm_label} because: {reasoning}")
+    except Exception as e:
+        print(f"Labelling failed: {e}")
+        rm_label = "UNKNOWN"
 
-    # load csv with files for links
-    # URLS = load_files_for_links()
-
-    # store past query in cosmodb and pull it out for llm based on user_id
+    # store past query in cosmodb and pull it out for llm based on user_id which done in checkpointer
 
     # give it to LLM
     if query.user_id not in graphs:
         graphs[query.user_id] = build_graph(llm=llm, vector_store=vector_store, checkpointer=checkpointer)
     graph = graphs[query.user_id]
 
-    config = {"configurable": {"thread_id": query.user_id}}
+    config = {"configurable": {"thread_id": query.user_id, "rm_filter": rm_label}}
     # answer_once(graph=graph, user_input=query.query,config=config,thread_id=query.user_id)
     response = answer_once(graph=graph, user_input=query.query,config=config,thread_id=query.user_id)
     print(f"user: {query.query}")
@@ -109,7 +122,7 @@ def ai_search_api(query: SearchQuery):
 
 
 @app.get("/get_download_url/{file_name}")
-def get_download_url(file_name: str):
+async def get_download_url(file_name: str):
     # Setup credentials (ensure these are in your .env)
     account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
     account_key = os.getenv('AZURE_STORAGE_KEY')
