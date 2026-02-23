@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-url" content="{{ api_url }}">
+    <meta name="download-url" content="{{ download_url }}">
+    <meta name="user-id" content="{{ user_id }}">
+    <title>Crown Commercial Service - Full Page</title>
+    <style>
+        :root {
+            --ccs-blue: #005ea5;
+            --ccs-light-blue: #b1d1e3;
+            --ccs-text: #0b0c0c;
+            --ccs-grey: #f3f2f1;
+            --ccs-glossary: #eef2d8;
+            --sidebar-width: 380px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            color: var(--ccs-text);
+            line-height: 1.5;
+            display: flex; /* Layout for sidebar */
+        }
+
+        /* Container for everything EXCEPT the sidebar */
+        .main-wrapper {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            min-width: 0; /* Prevents flex items from overflowing */
+        }
+
+        /* Top Bar & Header */
+        .top-nav { background: #8fb3ff; padding: 10px 5%; font-size: 14px; border-bottom: 1px solid #bfc1c3; display: flex; justify-content: space-between; }
+        header { padding: 20px 5%; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-weight: bold; font-size: 20px; display: flex; align-items: center; }
+        .logo img { height: 85px; width: auto; margin-right: 8px; }
+        nav ul { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; }
+        nav ul li a { text-decoration: none; color: var(--ccs-text); font-weight: bold; font-size: 14px; }
+
+        /* Hero Section */
+        .hero { background-color:#8fb3ff; padding: 60px 5%; display: flex; justify-content: space-between; align-items: center; }
+        .hero-content { max-width: 500px; }
+        .search-boxes { display: flex; gap: 20px; }
+        .search-card {
+            background: rgba(255,255,255,0.25);
+            padding: 40px;
+            margin: 10px;
+            width: 300px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Ensure both cards reserve the same title height so inputs align */
+        .search-title {
+            font-size: 28px;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 6px;
+            line-height: 1.1;
+            min-height: 64px; /* ~2 lines at this font size */
+            display: block;
+            margin: 0;
+        }
+
+        .search-form {
+            margin-top: 12px;
+            display: flex;
+            align-items: stretch;
+            border: 3px solid #ffdd00; /* yellow border */
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .search-form input[type="text"] {
+            flex: 1;
+            min-width: 0; /* allow input to shrink so the icon button never disappears */
+            border: 0;
+            outline: none;
+            padding: 10px 12px;
+            font-size: 16px;
+        }
+
+        .search-form button {
+            width: 64px;
+            flex: 0 0 64px; /* prevent flexbox from shrinking the button to 0 */
+            border: 0;
+            cursor: pointer;
+            background: #b5c327; /* green block */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-form button:hover { filter: brightness(0.95); }
+
+        .search-form button svg {
+            width: 24px;
+            height: 24px;
+            fill: #0b0c0c;
+        }
+
+        /* Disabled variant (keeps layout identical, just non-interactive) */
+        .search-form.is-disabled {
+            opacity: 0.75;
+        }
+        .search-form.is-disabled input,
+        .search-form.is-disabled button {
+            cursor: not-allowed;
+        }
+        .search-form.is-disabled button {
+            filter: grayscale(20%);
+        }
+
+        /* Info & News Sections */
+        .info-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 50px 5%; }
+        .info-card { border-top: 5px solid #a1b12e; padding: 20px; background: #fff; border: 1px solid #bbc946; border-top-width: 5px; }
+        .news-section { padding: 50px 5%; }
+        .news-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 25px; }
+        .news-item img { width: 100%; height: auto; }
+        .blue-cta-box { background: #8fb6e9; padding: 30px; border-radius: 4px; }
+        .btn-download { background: #b5c327; padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; }
+
+        /* Glossary & Footer */
+        .glossary-banner { background-color: var(--ccs-glossary); padding: 40px 5%; display: flex; align-items: flex-start; gap: 20px; }
+        .glossary-icon { background: #fff; padding: 10px; border-radius: 50%; border: 1px solid #d53880; }
+        footer { padding: 50px 5%; background: #fff; border-top: 1px solid #bfc1c3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; }
+        .footer-col h4 { font-size: 16px; margin-bottom: 20px; }
+        .footer-col ul { list-style: none; padding: 0; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col ul li a { text-decoration: none; color: var(--ccs-text); font-size: 13px; }
+        .footer-col ul li a:hover { text-decoration: underline; color: var(--ccs-blue); }
+        .back-to-top { text-align: right; padding: 10px 5%; font-size: 12px; }
+
+        /* PERSISTENT SIDEBAR CHAT */
+        #chat-window {
+            display: flex; /* Changed from none to flex */
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: white;
+            border-left: 1px solid #ccc;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+        .chat-header { background: var(--ccs-blue); color: white; padding: 15px; font-weight: bold; }
+        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 14px; background: #fafafa; }
+
+        /* Download Button inside Chat */
+        .download-btn {
+            background: #f3f2f1; border: 1px solid #bfc1c3; color: #005ea5;
+            padding: 6px 12px; font-size: 12px; font-weight: bold; text-align: left;
+            cursor: pointer; border-radius: 4px; transition: background 0.2s;
+            display: flex; align-items: flex-start; width: 100%;
+            box-sizing: border-box; white-space: normal; word-break: break-all; line-height: 1.4;
+        }
+        .download-btn:hover { background: #005ea5; color: white; }
+
+        #chat-toggle { display: none; } /* Hidden as sidebar is persistent */
+
+          .msg, .msg-bot, .msg-user {
+            word-wrap: break-word;       /* Older browser support */
+            overflow-wrap: break-word;   /* Prevents text from pushing past the edge */
+            word-break: break-word;      /* Forces long strings like URLs to wrap */
+            max-width: 90%;              /* Ensures bubble doesn't hit the very edge */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <div class="top-nav">
+            <div><span style="background:#b9d2e8; color:#090b10; padding:2px 5px;">beta</span> Help us make this service better. <u>Give feedback</u></div>
+            <div>Public Procurement Gateway: <a href="#">Create account</a> or <a href="#">Sign in</a></div>
+        </div>
+
+        <header style="background-color: #8fb3ff; padding: 10px 20px;">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo2.png') }}" alt="Logo">
+            </div>
+            <nav>
+                <ul>
+                    <li>Products and suppliers ▾</li>
+                    <li>For buyers ▾</li>
+                    <li>For suppliers ▾</li>
+                    <li>About ▾</li>
+                    <li>News ▾</li>
+                </ul>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Supporting better public procurement</h1>
+                <p><a href="#">Find out how we help the UK public sector achieve value for the nation in our digital brochure.</a></p>
+            </div>
+            <div class="search-boxes">
+                <div class="search-card">
+                    <div class="search-title">Search agreements</div>
+                    <form class="search-form" action="{{ url_for('results') }}" method="get">
+                        <input type="text" name="q" aria-label="Search agreements" />
+                        <button type="submit" aria-label="Search">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M10 4a6 6 0 1 1 0 12A6 6 0 0 1 10 4m0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                <div class="search-card">
+                    <div class="search-title">Search suppliers</div>
+                    <form class="search-form is-disabled" onsubmit="return false;">
+                        <input type="text" aria-label="Search suppliers (coming soon)" placeholder="Coming soon" disabled />
+                        <button type="button" aria-label="Search (coming soon)" disabled>
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M10 4a6 6 0 1 1 0 12A6 6 0 0 1 10 4m0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <div class="info-card">
+                <h3>How to buy</h3>
+                <p>With over 100 commercial agreements, we can help you get better value. Learn about our buying routes.</p>
+                <a href="#">Learn how to buy.</a>
+            </div>
+            <div class="info-card">
+                <h3>How to supply</h3>
+                <p>The UK public sector spends billions every year. Learn how your organisation can benefit.</p>
+                <a href="#">Learn how to supply.</a>
+            </div>
+            <div class="info-card">
+                <h3>Transforming Public Procurement</h3>
+                <p>The TPP programme will change how public procurement is regulated.</p>
+                <a href="#">Learn about the TPP programme.</a>
+            </div>
+        </section>
+
+        <section class="news-section">
+            <h2>Latest news</h2>
+            <div class="news-grid">
+                <div class="news-item">
+                    <img src="{{ url_for('static', filename='news.png') }}" alt="News">
+                    <p><strong>Changes to our agreements in December</strong></p>
+                    <small>12th January 2026</small>
+                </div>
+                <div class="news-item">
+                    <img src="{{ url_for('static', filename='news2.png') }}" alt="Supplier">
+                    <p><strong>How to successfully subcontract</strong></p>
+                    <small>7th January 2026</small>
+                </div>
+                <div class="blue-cta-box">
+                    <h2>Digital brochure 2025-2026</h2>
+                    <p>Turning your buying decisions into lasting impact</p>
+                    <button class="btn-download">Download brochure</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="glossary-banner">
+            <div class="glossary-icon">📖</div>
+            <div>
+                <h3>Glossary</h3>
+                <p>Learn common procurement terms.</p>
+                <a href="#">Read the glossary</a>
+            </div>
+        </div>
+
+        <div class="back-to-top">Back to top ↑</div>
+
+        <footer>
+            <div class="footer-col">
+                <h4>Products and support</h4>
+                <ul><li><a href="#">Search agreements</a></li><li><a href="#">Sectors</a></li></ul>
+            </div>
+            <div class="footer-col">
+                <h4>For buyers and suppliers</h4>
+                <ul><li><a href="#">How to buy</a></li><li><a href="#">How to supply</a></li></ul>
+            </div>
+            <div class="footer-col">
+                <h4>Corporate</h4>
+                <ul><li><a href="#">About CCS</a></li><li><a href="#">Press Office</a></li></ul>
+            </div>
+            <div class="footer-col">
+                <h4>Digital platforms</h4>
+                <ul><li><a href="#">Find a Tender</a></li><li><a href="#">Digital Marketplace</a></li></ul>
+            </div>
+        </footer>
+    </div>
+
+    {% include 'partials/chat_sidebar.html' %}
+    <script src="{{ url_for('static', filename='ccs_chat.js') }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.env
+unzipped_data
+.idea
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+agreements_data_csv.py
+website_agreement_data.csv
+filter_llm_results.csv
