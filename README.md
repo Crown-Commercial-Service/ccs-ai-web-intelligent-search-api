@@ -131,5 +131,5 @@ you are working locally but if you want to use the deployed version of the app y
 
 ## Experiment results for query filter capability
 
-Currently the accuracy for the filter mechanism is 77.9% (aiming to improve this) this is on 19 frameworks and 5 question for each framework.
+Currently, the accuracy for the filter mechanism is 77.9% (aiming to improve this) this is on 19 frameworks and 5 question for each framework.
 The questions were made using gemini. The file was not uploaded to repo but if you want to have it contact AI Team.
