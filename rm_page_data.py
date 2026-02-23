@@ -13,16 +13,16 @@ import time
 load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 
-ccs_frameworks = ccs_frameworks[0:3]
+ccs_frameworks = ccs_frameworks[0:4]
 allowed_filetypes = ('.odt', '.docx', '.pdf', ".txt")
 
 #get df and loop through all titles and download files into blob storage so it can be used for RAG
 base_url = os.getenv("BASE_URL")
-def zip_checker(url, data, excluded_extension=('.odt', '.docx', '.xlsx', 'pdf')):
+def zip_checker(url, data):
     ZIP_MAGIC = b'\x50\x4b\x03\x04'
     binary_data = data.content
     extension = Path(url)
-    if extension.suffix in excluded_extension:
+    if extension.suffix in allowed_filetypes:
         return False
     # if bytes is less than 4 then it cannot be zip
     if len(binary_data) < 4:
@@ -39,7 +39,7 @@ def unzipper_v2(data, rm_number):
     return extract_recursive(zip_stream, base_dir, rm_number)
 
 
-def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.odt', '.docx', '.xlsx', '.pdf'),
+def extract_recursive(zip_input, extract_to, rm_number,
                       excluded_filenames=['mimetype', '.DS_Store', 'thumbs.db']):
     unzipped_files = []
     with zipfile.ZipFile(zip_input, 'r') as zip_ref:
@@ -53,7 +53,7 @@ def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.od
             continue
 
         # 1. Handle Nested Zips
-        if zipfile.is_zipfile(item) and item.suffix not in excluded_extension:
+        if zipfile.is_zipfile(item) and item.suffix not in allowed_filetypes:
             nested_dir = item.with_suffix('')
             nested_dir.mkdir(exist_ok=True)
             unzipped_files.extend(extract_recursive(item, nested_dir, rm_number))
@@ -61,7 +61,7 @@ def extract_recursive(zip_input, extract_to, rm_number, excluded_extension=('.od
 
             # 2. Handle Valid Files
 
-        elif item.suffix in allowed_filetypes and  item.name.lower() not in excluded_filenames:
+        elif item.suffix in allowed_filetypes and  item.name not in excluded_filenames:
             # ^RM\d+ matches RM + digits at the start. [_ ]* matches any underscores or spaces following.
             clean_name = re.sub(r'^RM\d+[_ ]*', '', item.name, flags=re.IGNORECASE)
 
@@ -120,7 +120,7 @@ def get_rm_page_data():
             for doc in documents:
                 try:
                     data_url = doc["url"]
-                    print(data_url)
+                    # print(data_url)
                     # Use session for speed
                     response = session.get(data_url, stream=True)
 
@@ -139,6 +139,7 @@ def get_rm_page_data():
 
                             blob_client = container_client.get_blob_client(azure_file_name)
                             blob_client.upload_blob(data=response.content, overwrite=True, metadata=blob_metadata)
+
 
                     else:
                         # Pass the specific temp dir to unzipper
@@ -165,4 +166,4 @@ get_rm_page_data()
 end_time = time.perf_counter()
 duration = end_time - start_time
 
-print(f" Python version of get_rm_page_data executed in {duration:.4f} seconds")
+print(f"get_rm_page_data executed in {duration:.4f} seconds")
