@@ -129,3 +129,7 @@ run `dummy_flask_app2.py` providing if you using the deployed version of this ap
 also do the commands for the api only instructions(follow only step 1) and add the local host url for `WEBSEARCH_API_URL` and `DOWNLOAD_SOURCE_URL`. `TEST_ACCESS_KEY ` can be anything if
 you are working locally but if you want to use the deployed version of the app you must contact the AI team for that.
 
+## Experiment results for query filter capability
+
+Currently the accuracy for the filter mechanism is 77.9% (aiming to improve this) this is on 19 frameworks and 5 question for each framework.
+The questions were made using gemini. The file was not uploaded to repo but if you want to have it contact AI Team.
