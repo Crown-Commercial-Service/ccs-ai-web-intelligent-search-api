@@ -13,6 +13,7 @@ from langchain_core.runnables import RunnableConfig
 class AgentState(TypedDict):
     """The state of the agent, containing the conversation history."""
     messages: Annotated[List[BaseMessage], add_messages]
+    last_rm_label: str
 
 def query_or_respond(state: MessagesState, llm: Any, retrieve_tool: Any):
     "Generate tool call for retrieval, or respond directly"
@@ -180,7 +181,7 @@ def build_graph(llm, vector_store, checkpointer):
     generate_node = partial(generate, llm=llm)
     tool_node = ToolNode([retrieve_bound])
 
-    graph_builder = StateGraph(MessagesState)
+    graph_builder = StateGraph(AgentState)
 
     graph_builder.add_node("query_or_respond", query_node)
     graph_builder.add_node("tools", tool_node)

@@ -1,14 +1,22 @@
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent
+from pydantic_ai import Agent, ModelSettings
 
 class DataFilterer(BaseModel):
     rm_number: str = Field(description="The extracted or inferred RM number.")
     reasoning: str = Field(description="Briefly why you picked this RM.")
 
 async def run_rm_labeller(model, rm_descriptions, user_input):
+    """ Use this function, it labels a conversation based on the RM description
+
+    :param model: LLM model to label conversation based on RM
+    :param rm_descriptions: user's query
+    :param user_input: all the RM labels and their descriptions
+    :return(str): AI result
+    """
     rm_labeller = Agent(
         model=model,
         output_type= DataFilterer,
+        model_settings=ModelSettings(temperature=0.0),
         system_prompt=(
             "You are a Senior Procurement Analyst. You are an expert across 200 government frameworks. "
             "Your task is to map any user query—no matter how technical or niche—to the correct RM number. "
@@ -26,6 +34,16 @@ async def run_rm_labeller(model, rm_descriptions, user_input):
 
 
 async def run_rm_labeller_v2(model, user_input,rm_descriptions ,message_history=None):
+    """ This function was used for experiment if giving the lightweight AI memory
+    but it made the model perform worse as it struggled to let go of chat history
+    that was not useful to question
+
+    :param model(Azure LLM): LLM model to label conversation based on RM
+    :param user_input(str): user's query
+    :param rm_descriptions(str):  all the RM labels and their descriptions
+    :param message_history(Pydantic MessageHistory): stores conversation history
+    :return result(str): AI result
+    """
     # Initialize the agent
     agent = Agent(model=model, output_type=DataFilterer)
 
