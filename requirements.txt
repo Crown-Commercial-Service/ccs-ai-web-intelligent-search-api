@@ -111,7 +111,7 @@ kombu==5.5.4
 langchain==0.3.26
 langchain-community==0.3.27
 langchain-core==0.3.68
-langchain-openai==0.3.28
+langchain-openai
 langchain-text-splitters==0.3.8
 langgraph==0.5.1
 langgraph-checkpoint==2.1.0
@@ -231,4 +231,4 @@ zstandard==0.23.0
 langgraph-checkpoint-cosmosdb==0.2.5
 uvicorn==0.35.0
 fastapi==0.116.2
-pydantic-ai== 1.59.0
+pydantic-ai
