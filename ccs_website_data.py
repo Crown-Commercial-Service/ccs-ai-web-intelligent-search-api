@@ -1,7 +1,6 @@
 import requests
 import pandas as pd
 import time
-import json
 from bs4 import BeautifulSoup
 
 

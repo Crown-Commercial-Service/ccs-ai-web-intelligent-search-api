@@ -2,7 +2,6 @@ from langchain_openai import  AzureChatOpenAI
 import os
 from system_prompt import system_prompt
 from dotenv import load_dotenv
-import os
 
 
 load_dotenv()
