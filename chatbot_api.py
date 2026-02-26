@@ -6,7 +6,7 @@ os.environ["AZURESEARCH_FIELDS_CONTENT"] = "chunk"
 from dotenv import load_dotenv
 from langchain_community.vectorstores.azuresearch import AzureSearch
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
-from src.multiturn_utils import build_graph, answer_once
+from src.ccs_ai_josh.multiturn_utils import build_graph, answer_once
 from langgraph_checkpoint_cosmosdb import CosmosDBSaver
 
 from fastapi import  FastAPI
@@ -18,7 +18,7 @@ from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from openai import AsyncAzureOpenAI
-from ai_docs_filterer_for_RAG import run_rm_labeller
+from src.wis.ai_docs_filterer_for_RAG import run_rm_labeller
 from ccs_website_data import  fetch_all_ccs_frameworks
 
 
