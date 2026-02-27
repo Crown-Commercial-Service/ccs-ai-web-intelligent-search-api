@@ -76,23 +76,30 @@ truthset_file_path = os.path.join("data", "truthset.tsv")
 truthset = pd.read_csv(truthset_file_path, delimiter="\t")
 truthset = truthset.head(2)
 print(truthset.head())
-responses = []
-rm_labels = []
-for i in truthset["Question"]:
-    # build the graph each time, to clear context
-    memory = MemorySaver() # for in-memory state handling
-    graph = build_graph(llm=llm, vector_store=vector_store, checkpointer=memory)
-    rm_label_result = run_rm_labeller(pydantic_rm_labeller_model, rm_descriptions, i)
-    rm_labels.append(rm_label_result)
-    config = {"rm_filter": rm_label_result.rm_number}
-    response = answer_once(graph, i, config)
-    responses.append(response)
-    if len(responses) % 10 == 0:
-        print(f"Responses generated for {len(responses)} questions")
-truthset["RM Number Result"] = [i.rm_number for i in rm_labels]
-truthset["RM Number Reasoning"] = [i.reasoning for i in rm_labels]
-truthset["Answer"] = [i["answer"] for i in responses]
-truthset["Retrieved Files"] = [i["source_names"] for i in responses]
-truthset["Retrieved Contents"] = [i["source_contents"] for i in responses]
-print("Responses generated for all questions")
-print(truthset.head())
+
+async def run_eval_loop():
+    responses = []
+    rm_labels = []
+    for i in truthset["Question"]:
+        # build the graph each time, to clear context
+        memory = MemorySaver() # for in-memory state handling
+        graph = build_graph(llm=llm, vector_store=vector_store, checkpointer=memory)
+        rm_label_result = await run_rm_labeller(pydantic_rm_labeller_model, rm_descriptions, i)
+        rm_labels.append(rm_label_result)
+        config = {"rm_filter": rm_label_result.rm_number}
+        response = answer_once(graph, i, config)
+        responses.append(response)
+        if len(responses) % 10 == 0:
+            print(f"Responses generated for {len(responses)} questions")
+    truthset["RM Number Result"] = [i.rm_number for i in rm_labels]
+    truthset["RM Number Reasoning"] = [i.reasoning for i in rm_labels]
+    truthset["Answer"] = [i["answer"] for i in responses]
+    truthset["Retrieved Files"] = [i["source_names"] for i in responses]
+    truthset["Retrieved Contents"] = [i["source_contents"] for i in responses]
+    print("Responses generated for all questions")
+    outpath = os.path.join("data", "results.tsv")
+    truthset.to_csv(outpath, sep="\t", index=False)
+    print(f"Responses written to {outpath}")
+
+import asyncio
+asyncio.run(run_eval_loop())
