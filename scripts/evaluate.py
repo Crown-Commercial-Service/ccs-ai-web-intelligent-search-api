@@ -10,6 +10,7 @@ from langchain_community.vectorstores.azuresearch import AzureSearch
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from ccs_ai_josh.multiturn_utils import build_graph, answer_once
 from langgraph_checkpoint_cosmosdb import CosmosDBSaver
+from langgraph.checkpoint.memory import MemorySaver # only if running locally
 
 from fastapi import  FastAPI
 from pydantic import BaseModel
@@ -72,4 +73,20 @@ rm_descriptions = "\n".join([
 
 # truthset needs to be downloaded from Google Drive and placed in `data` folder
 truthset_file_path = os.path.join("data", "truthset.tsv")
-truthset = pd.read_tsv(truthset_file_path)
+truthset = pd.read_csv(truthset_file_path, delimiter="\t")
+truthset = truthset.head(2)
+print(truthset.head())
+responses = []
+for i in truthset["Question"]:
+    # build the graph each time, to clear context
+    memory = MemorySaver() # for in-memory state handling
+    graph = build_graph(llm=llm, vector_store=vector_store, checkpointer=memory)
+    response = answer_once(graph, i)
+    responses.append(response)
+    if len(responses) % 10 == 0:
+        print(f"Responses generated for {len(responses)} questions")
+truthset["Answer"] = [i["answer"] for i in responses]
+truthset["Retrieved Files"] = [i["source_names"] for i in responses]
+truthset["Retrieved Contents"] = [i["source_contents"] for i in responses]
+print("Responses generated for all questions")
+print(truthset.head())

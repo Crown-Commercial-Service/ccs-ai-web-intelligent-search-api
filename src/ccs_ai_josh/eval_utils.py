@@ -1,6 +1,6 @@
 import os
 from langchain_openai import AzureChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from unicodedata import normalize
 
 def load_prompt(prompt_name):

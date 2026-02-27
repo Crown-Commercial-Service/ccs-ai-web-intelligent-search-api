@@ -85,7 +85,17 @@ def stream_turn(
 
     Yields the values dicts produced by graph.stream(...).
     """
-    # config = {"configurable": {"thread_id": thread_id}}
+    # Safely initialize config if it's None
+    if config is None:
+        config = {}
+    
+    # Safely initialize the "configurable" key if it doesn't exist
+    if "configurable" not in config:
+        config["configurable"] = {}
+        
+    # Inject the thread_id (not needed if using CosmosDB to handle message memory)
+    config["configurable"]["thread_id"] = thread_id 
+
     yield from graph.stream(
         {"messages": [{"role": "user", "content": user_input}]},
         stream_mode=stream_mode,
@@ -195,7 +205,6 @@ def build_graph(llm, vector_store, checkpointer):
     graph_builder.add_edge("tools", "generate")
     graph_builder.add_edge("generate", END)
 
-    # memory = MemorySaver() # for in-memory state handling
     graph = graph_builder.compile(checkpointer=checkpointer)
     return graph
 
