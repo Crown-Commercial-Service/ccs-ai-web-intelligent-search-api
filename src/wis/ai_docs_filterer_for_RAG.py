@@ -9,8 +9,8 @@ async def run_rm_labeller(model, rm_descriptions, user_input):
     """ Use this function, it labels a conversation based on the RM description
 
     :param model: LLM model to label conversation based on RM
-    :param rm_descriptions: user's query
-    :param user_input: all the RM labels and their descriptions
+    :param rm_descriptions: all the RM labels and their descriptions
+    :param user_input: user's query
     :return(str): AI result
     """
     rm_labeller = Agent(
