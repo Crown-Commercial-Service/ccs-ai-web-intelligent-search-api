@@ -7,6 +7,22 @@
     <meta name="download-url" content="{{ download_url }}">
     <meta name="user-id" content="{{ user_id }}">
     <title>Crown Commercial Service - Full Page</title>
+    <script>
+        (function () {
+            var key = "ccs_chat_layout_state";
+            var root = document.documentElement;
+            try {
+                var saved = localStorage.getItem(key);
+                if (saved === "minimized" || saved === "maximized") {
+                    root.classList.add("chat-" + saved);
+                    return;
+                }
+            } catch (_) {}
+            if (window.matchMedia("(max-width: 1024px)").matches) {
+                root.classList.add("chat-minimized");
+            }
+        })();
+    </script>
     <style>
         :root {
             --ccs-blue: #005ea5;
@@ -30,6 +46,7 @@
             flex: 1;
             margin-right: var(--sidebar-width);
             min-width: 0; /* Prevents flex items from overflowing */
+            transition: margin-right 0.25s ease;
         }
 
         /* Top Bar & Header */
@@ -136,42 +153,8 @@
         .footer-col ul li a:hover { text-decoration: underline; color: var(--ccs-blue); }
         .back-to-top { text-align: right; padding: 10px 5%; font-size: 12px; }
 
-        /* PERSISTENT SIDEBAR CHAT */
-        #chat-window {
-            display: flex; /* Changed from none to flex */
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: white;
-            border-left: 1px solid #ccc;
-            flex-direction: column;
-            z-index: 1000;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-        }
-        .chat-header { background: var(--ccs-blue); color: white; padding: 15px; font-weight: bold; }
-        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 14px; background: #fafafa; }
-
-        /* Download Button inside Chat */
-        .download-btn {
-            background: #f3f2f1; border: 1px solid #bfc1c3; color: #005ea5;
-            padding: 6px 12px; font-size: 12px; font-weight: bold; text-align: left;
-            cursor: pointer; border-radius: 4px; transition: background 0.2s;
-            display: flex; align-items: flex-start; width: 100%;
-            box-sizing: border-box; white-space: normal; word-break: break-all; line-height: 1.4;
-        }
-        .download-btn:hover { background: #005ea5; color: white; }
-
-        #chat-toggle { display: none; } /* Hidden as sidebar is persistent */
-
-          .msg, .msg-bot, .msg-user {
-            word-wrap: break-word;       /* Older browser support */
-            overflow-wrap: break-word;   /* Prevents text from pushing past the edge */
-            word-break: break-word;      /* Forces long strings like URLs to wrap */
-            max-width: 90%;              /* Ensures bubble doesn't hit the very edge */
-        }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/chat_sidebar.css') }}">
 </head>
 <body>
 

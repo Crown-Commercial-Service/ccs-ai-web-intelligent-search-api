@@ -1,0 +1,140 @@
+#chat-window {
+    display: flex;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: white;
+    border-left: 1px solid #ccc;
+    flex-direction: column;
+    z-index: 1000;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.25s ease, width 0.25s ease, left 0.25s ease;
+}
+
+.chat-header {
+    background: var(--ccs-blue);
+    color: white;
+    padding: 12px 15px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.chat-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.chat-control-btn {
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: transparent;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.chat-control-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+#chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 14px;
+    background: #fafafa;
+}
+
+#chat-minimized-toggle {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1100;
+    display: none;
+    border: none;
+    border-radius: 999px;
+    background: var(--ccs-blue);
+    color: #fff;
+    padding: 14px 22px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 16px;
+    min-height: 52px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+}
+
+html.chat-minimized #chat-window,
+body.chat-minimized #chat-window {
+    transform: translateX(100%);
+}
+
+html.chat-minimized #chat-minimized-toggle,
+body.chat-minimized #chat-minimized-toggle {
+    display: block;
+}
+
+html.chat-minimized .main-wrapper,
+body.chat-minimized .main-wrapper,
+html.chat-maximized .main-wrapper,
+body.chat-maximized .main-wrapper {
+    margin-right: 0;
+}
+
+html.chat-maximized #chat-window,
+body.chat-maximized #chat-window {
+    left: 0;
+    right: 0;
+    width: 100vw;
+    transform: none;
+}
+
+.download-btn {
+    background: #f3f2f1;
+    border: 1px solid #bfc1c3;
+    color: #005ea5;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.download-btn:hover {
+    background: #005ea5;
+    color: white;
+}
+
+.msg,
+.msg-bot,
+.msg-user {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 90%;
+}

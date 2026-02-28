@@ -7,6 +7,22 @@
     <meta name="download-url" content="{{ download_url }}">
     <meta name="user-id" content="{{ user_id }}">
     <title>{{ agreement.title }}</title>
+    <script>
+        (function () {
+            var key = "ccs_chat_layout_state";
+            var root = document.documentElement;
+            try {
+                var saved = localStorage.getItem(key);
+                if (saved === "minimized" || saved === "maximized") {
+                    root.classList.add("chat-" + saved);
+                    return;
+                }
+            } catch (_) {}
+            if (window.matchMedia("(max-width: 1024px)").matches) {
+                root.classList.add("chat-minimized");
+            }
+        })();
+    </script>
     <style>
         :root {
             --ccs-blue: #005ea5;
@@ -26,7 +42,7 @@
             display: flex;
         }
 
-        .main-wrapper { flex: 1; margin-right: var(--sidebar-width); min-width: 0; }
+        .main-wrapper { flex: 1; margin-right: var(--sidebar-width); min-width: 0; transition: margin-right 0.25s ease; }
         .top-nav { background: #8fb3ff; padding: 10px 5%; font-size: 14px; border-bottom: 1px solid #bfc1c3; display: flex; justify-content: space-between; }
         header { padding: 20px 5%; display: flex; align-items: center; justify-content: space-between; }
         .logo { font-weight: bold; font-size: 20px; display: flex; align-items: center; }
@@ -204,31 +220,8 @@
         .back { display: inline-block; margin-top: 18px; color: var(--ccs-link); text-decoration: none; font-weight: 700; }
         .back:hover { text-decoration: underline; }
 
-        /* Sidebar chat */
-        #chat-window {
-            display: flex;
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: white;
-            border-left: 1px solid #ccc;
-            flex-direction: column;
-            z-index: 1000;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-        }
-        .chat-header { background: var(--ccs-blue); color: white; padding: 15px; font-weight: bold; }
-        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 14px; background: #fafafa; }
-        .download-btn {
-            background: #f3f2f1; border: 1px solid #bfc1c3; color: #005ea5;
-            padding: 6px 12px; font-size: 12px; font-weight: bold; text-align: left;
-            cursor: pointer; border-radius: 4px; transition: background 0.2s;
-            display: flex; align-items: flex-start; width: 100%;
-            box-sizing: border-box; white-space: normal; word-break: break-all; line-height: 1.4;
-        }
-        .download-btn:hover { background: #005ea5; color: white; }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/chat_sidebar.css') }}">
 </head>
 <body>
     <div class="main-wrapper">

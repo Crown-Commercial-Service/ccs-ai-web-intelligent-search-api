@@ -7,6 +7,22 @@
     <meta name="download-url" content="{{ download_url }}">
     <meta name="user-id" content="{{ user_id }}">
     <title>Crown Commercial Service - Results</title>
+    <script>
+        (function () {
+            var key = "ccs_chat_layout_state";
+            var root = document.documentElement;
+            try {
+                var saved = localStorage.getItem(key);
+                if (saved === "minimized" || saved === "maximized") {
+                    root.classList.add("chat-" + saved);
+                    return;
+                }
+            } catch (_) {}
+            if (window.matchMedia("(max-width: 1024px)").matches) {
+                root.classList.add("chat-minimized");
+            }
+        })();
+    </script>
     <style>
         :root {
             --ccs-blue: #005ea5;
@@ -31,6 +47,7 @@
             flex: 1;
             margin-right: var(--sidebar-width);
             min-width: 0;
+            transition: margin-right 0.25s ease;
         }
 
         .top-nav {
@@ -132,40 +149,8 @@
 
         .result-desc { margin: 0; font-size: 20px; line-height: 1.6; }
 
-        /* PERSISTENT SIDEBAR CHAT (same styling as index_v2.html) */
-        #chat-window {
-            display: flex;
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: white;
-            border-left: 1px solid #ccc;
-            flex-direction: column;
-            z-index: 1000;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-        }
-
-        .chat-header { background: var(--ccs-blue); color: white; padding: 15px; font-weight: bold; }
-        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 14px; background: #fafafa; }
-
-        .download-btn {
-            background: #f3f2f1; border: 1px solid #bfc1c3; color: #005ea5;
-            padding: 6px 12px; font-size: 12px; font-weight: bold; text-align: left;
-            cursor: pointer; border-radius: 4px; transition: background 0.2s;
-            display: flex; align-items: flex-start; width: 100%;
-            box-sizing: border-box; white-space: normal; word-break: break-all; line-height: 1.4;
-        }
-        .download-btn:hover { background: #005ea5; color: white; }
-
-        .msg, .msg-bot, .msg-user {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            max-width: 90%;
-        }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/chat_sidebar.css') }}">
 </head>
 <body>
     <div class="main-wrapper">
