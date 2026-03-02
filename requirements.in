@@ -1,0 +1,42 @@
+# --- Web & API ---
+fastapi==0.116.2
+uvicorn==0.35.0
+Flask==3.1.2
+python-dotenv==1.1.1
+beautifulsoup4==4.14.2
+
+# --- AI & LLM Core (2026 Modern Stack) ---
+# We use >= here to let pip-compile find the best overlapping versions
+langchain>=1.2.10
+langchain-community>=0.4.1
+langchain-core>=1.2.15
+langchain-openai>=1.1.10
+langchain-text-splitters>=1.1.1
+pydantic-ai-slim[openai,google,groq]==1.59.0
+
+# --- State & Orchestration ---
+langgraph>=1.0.9
+langgraph-checkpoint>=4.0.0
+langgraph-prebuilt>=1.0.0
+langgraph-sdk>=0.3.0
+langgraph-checkpoint-cosmosdb>=0.2.5
+
+# --- Data & Vector Search ---
+azure-search-documents==11.5.3
+azure-storage-blob==12.26.0
+azure-identity==1.23.0
+pandas==2.3.3
+numpy==2.3.4
+SQLAlchemy==2.0.44
+
+# --- Infrastructure & Tooling ---
+dvc==3.63.0
+celery==5.5.3
+typing-extensions>=4.15.0
+pytest==9.0.2
+pip-tools
+
+# --- Custom External Tools (Remote Git) ---
+# Note: Removed '-e' for Azure Deployment compatibility
+ccs_ai_josh @ git+https://github.com/Crown-Commercial-Service/ccs-ai-josh@33aaec591e98513ccc490d3b00d70b49b2769dcc
+feedback_mechanism @ git+https://github.com/DavisAgyemang/Universal_Feedback_tool.git@18008c7d02ae6a0748958ec9f6339bed43f5564c
