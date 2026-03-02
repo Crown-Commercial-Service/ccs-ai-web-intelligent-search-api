@@ -3,7 +3,7 @@ import types
 
 import requests
 
-from ccs_website_data import clean_html_from_text, fetch_all_ccs_frameworks
+from src.wis.ccs_website_data import clean_html_from_text, fetch_all_ccs_frameworks
 
 
 class FakeResponse:
@@ -92,7 +92,9 @@ def test_fetch_all_ccs_frameworks_paginates_and_cleans(monkeypatch):
         [FakeResponse(page_1_payload), FakeResponse(page_2_payload)]
     )
     monkeypatch.setattr(requests, "Session", lambda: fake_session)
-    monkeypatch.setitem(sys.modules, "pandas", types.SimpleNamespace(DataFrame=FakeDataFrame))
+    monkeypatch.setitem(
+        sys.modules, "pandas", types.SimpleNamespace(DataFrame=FakeDataFrame)
+    )
 
     result = fetch_all_ccs_frameworks(status="Live", sleep_seconds=0)
 
