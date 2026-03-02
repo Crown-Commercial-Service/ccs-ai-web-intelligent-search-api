@@ -25,12 +25,17 @@
     const apiUrl = getMeta("api-url");
     const downloadUrl = getMeta("download-url");
 
+    const chatWindow = document.getElementById("chat-window");
     const chatMessages = document.getElementById("chat-messages");
     const chatInput = document.getElementById("chat-input");
+    const chatMinimizeBtn = document.getElementById("chat-minimize-btn");
+    const chatMaximizeBtn = document.getElementById("chat-maximize-btn");
+    const chatMinimizedToggle = document.getElementById("chat-minimized-toggle");
 
-    if (!userId || !chatMessages || !chatInput) return;
+    if (!userId || !chatWindow || !chatMessages || !chatInput) return;
 
     const storageKey = `ccs_chat_history_${userId}`;
+    const chatLayoutStateKey = "ccs_chat_layout_state";
     let isHydrating = false;
 
     function loadHistory() {
@@ -174,6 +179,68 @@
       }
     }
 
+    function setLayoutState(state) {
+      const nextState =
+        state === "maximized" || state === "minimized" ? state : "normal";
+      const root = document.documentElement;
+      root.classList.remove("chat-minimized", "chat-maximized");
+      document.body.classList.remove("chat-minimized", "chat-maximized");
+
+      if (nextState === "minimized") {
+        root.classList.add("chat-minimized");
+        document.body.classList.add("chat-minimized");
+      } else if (nextState === "maximized") {
+        root.classList.add("chat-maximized");
+        document.body.classList.add("chat-maximized");
+      }
+
+      if (chatMaximizeBtn) {
+        const isMax = nextState === "maximized";
+        chatMaximizeBtn.textContent = isMax ? "< >" : "[ ]";
+        chatMaximizeBtn.title = isMax ? "Restore chat size" : "Maximize chat";
+        chatMaximizeBtn.setAttribute(
+          "aria-label",
+          isMax ? "Restore chat size" : "Maximize chat"
+        );
+      }
+
+      try {
+        localStorage.setItem(chatLayoutStateKey, nextState);
+      } catch (_) {
+        // ignore quota / blocked storage
+      }
+    }
+
+    function getDefaultLayoutState() {
+      return window.matchMedia("(max-width: 1024px)").matches
+        ? "minimized"
+        : "normal";
+    }
+
+    function getInitialLayoutState() {
+      try {
+        const saved = localStorage.getItem(chatLayoutStateKey);
+        if (saved === "normal" || saved === "minimized" || saved === "maximized") {
+          return saved;
+        }
+      } catch (_) {
+        // ignore storage errors and fall back to responsive default
+      }
+      return getDefaultLayoutState();
+    }
+
+    function toggleMaximize() {
+      if (document.body.classList.contains("chat-maximized")) {
+        setLayoutState("normal");
+        return;
+      }
+      setLayoutState("maximized");
+    }
+
+    function restoreFromMinimized() {
+      setLayoutState("normal");
+    }
+
     // expose for inline onclick handlers
     window.sendQuery = sendQuery;
     window.downloadSource = downloadSource;
@@ -186,6 +253,17 @@
       }
     });
 
+    if (chatMinimizeBtn) {
+      chatMinimizeBtn.addEventListener("click", () => setLayoutState("minimized"));
+    }
+    if (chatMaximizeBtn) {
+      chatMaximizeBtn.addEventListener("click", toggleMaximize);
+    }
+    if (chatMinimizedToggle) {
+      chatMinimizedToggle.addEventListener("click", restoreFromMinimized);
+    }
+
+    setLayoutState(getInitialLayoutState());
     hydrateChat();
   }
 
