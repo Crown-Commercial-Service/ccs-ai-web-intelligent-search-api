@@ -7,6 +7,7 @@ def system_prompt(user_query, title):
     title: {title}   
     """
 
+
 def system_prompt_v2(user_query, title, description):
     return f"""
     You are an expert document relevance classifier. Your sole task is to judge whether the provided document chunk is useful for answering the user's query.

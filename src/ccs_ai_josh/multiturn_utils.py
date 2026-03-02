@@ -13,10 +13,13 @@ from pathlib import Path
 # Path to the reasoning prompt file
 REASONING_PROMPT_PATH = Path(__file__).parents[2] / "prompts" / "reasoning.md"
 
+
 class AgentState(TypedDict):
     """The state of the agent, containing the conversation history."""
+
     messages: Annotated[List[BaseMessage], add_messages]
     last_rm_label: str
+
 
 def query_or_respond(state: MessagesState, llm: Any, retrieve_tool: Any):
     "Generate tool call for retrieval, or respond directly"
@@ -25,8 +28,10 @@ def query_or_respond(state: MessagesState, llm: Any, retrieve_tool: Any):
     # the response will contain the most recent response and the previous responses
     return {"messages": [response]}
 
+
 def create_bound_retrieve_tool(vector_store):
     """Create a properly decorated retrieve tool bound to a specific vector store"""
+
     @tool(response_format="content_and_artifact")
     def retrieve_bound(query: str, config: RunnableConfig):
         """Retrieve information related to a query"""
@@ -36,13 +41,17 @@ def create_bound_retrieve_tool(vector_store):
             search_filter = f"rm_number eq '{rm_filter}'"
         else:
             search_filter = None
-        retrieved_docs = vector_store.similarity_search(query, k=5, filters=search_filter)
+        retrieved_docs = vector_store.similarity_search(
+            query, k=5, filters=search_filter
+        )
         serialized = "\n\n".join(
             f"Source: {doc.metadata}\nContent: {doc.page_content}"
             for doc in retrieved_docs
         )
         return serialized, retrieved_docs
+
     return retrieve_bound
+
 
 def generate(state: MessagesState, llm: Any):
     """Generate answer"""
@@ -74,13 +83,13 @@ def generate(state: MessagesState, llm: Any):
     response = llm.invoke(prompt)
     return {"messages": [response]}
 
+
 def stream_turn(
     graph,
     user_input: str,
     config: dict,
     thread_id: str = "abc123",
     stream_mode: str = "values",
-
 ) -> Iterator[Dict[str, Any]]:
     """
     Stream a single user turn through the graph, yielding step values.
@@ -90,13 +99,13 @@ def stream_turn(
     # Safely initialize config if it's None
     if config is None:
         config = {}
-    
+
     # Safely initialize the "configurable" key if it doesn't exist
     if "configurable" not in config:
         config["configurable"] = {}
-        
+
     # Inject the thread_id (not needed if using CosmosDB to handle message memory)
-    config["configurable"]["thread_id"] = thread_id 
+    config["configurable"]["thread_id"] = thread_id
 
     yield from graph.stream(
         {"messages": [{"role": "user", "content": user_input}]},
@@ -104,12 +113,8 @@ def stream_turn(
         config=config,
     )
 
-def answer_once(
-    graph,
-    user_input: str,
-    thread_id: str = "abc123",
-    config: dict = None
-):
+
+def answer_once(graph, user_input: str, thread_id: str = "abc123", config: dict = None):
     """
     Run one turn and return both the final AI answer and the retrieved context.
 
@@ -121,7 +126,9 @@ def answer_once(
     last_ai_content = ""
     final_messages = []
 
-    for step in stream_turn(graph=graph, user_input=user_input, config=config, thread_id=thread_id):
+    for step in stream_turn(
+        graph=graph, user_input=user_input, config=config, thread_id=thread_id
+    ):
         # in case there have been no messages yet, use `get` to pass a default value (empty list)
         messages = step.get("messages", [])
         if messages:
@@ -169,7 +176,7 @@ def answer_once(
                     # Check if the artifact is a langchain_core.documents.base.Document object (retrieval did occur), or a dict (retrieval didn't occur)
                     if isinstance(doc, Document):
                         # retrieval did occur, so return the doc names and contents
-                        source_names.append(doc.metadata['title'])
+                        source_names.append(doc.metadata["title"])
                         source_contents.append(doc.page_content)
                     # Skip non-Document objects without clearing existing sources
         else:
@@ -179,9 +186,10 @@ def answer_once(
     response = {
         "answer": last_ai_content,
         "source_names": source_names,
-        "source_contents": source_contents
+        "source_contents": source_contents,
     }
     return response
+
 
 def build_graph(llm, vector_store, checkpointer):
     # create a properly decorated tool bound to the vector store
@@ -200,15 +208,14 @@ def build_graph(llm, vector_store, checkpointer):
 
     graph_builder.set_entry_point("query_or_respond")
     graph_builder.add_conditional_edges(
-        "query_or_respond",
-        tools_condition,
-        {END: END, "tools": "tools"}
+        "query_or_respond", tools_condition, {END: END, "tools": "tools"}
     )
     graph_builder.add_edge("tools", "generate")
     graph_builder.add_edge("generate", END)
 
     graph = graph_builder.compile(checkpointer=checkpointer)
     return graph
+
 
 def format_sources(source_names, CI_docs_URLs):
     """Format source documents into links and create expander content"""
@@ -221,10 +228,10 @@ def format_sources(source_names, CI_docs_URLs):
 
     for source_name in unique_sources:
         # Convert file name to links to docs
-        doc_row = CI_docs_URLs[CI_docs_URLs['File Name']==source_name]
+        doc_row = CI_docs_URLs[CI_docs_URLs["File Name"] == source_name]
         # if the file is in the CI Docs URLs table, add a hyperlink
         if doc_row.shape[0] > 0:
-            doc_URL = doc_row.iloc[0,:]['File URL']
+            doc_URL = doc_row.iloc[0, :]["File URL"]
             source_links.append(f"[{source_name}]({doc_URL})")
         # if the file is missing from the CI Docs URLs table, just add a name
         else:
@@ -233,6 +240,8 @@ def format_sources(source_names, CI_docs_URLs):
     # Create formatted source block for expander
     sources_content = f"**Most Relevant Document:**\n- {source_links[0]}"
     if len(source_links) > 1:
-        sources_content += "\n\n**Other Related Documents:**\n" + "\n".join(f"- {link}" for link in source_links[1:])
+        sources_content += "\n\n**Other Related Documents:**\n" + "\n".join(
+            f"- {link}" for link in source_links[1:]
+        )
 
     return sources_content
