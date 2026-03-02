@@ -191,6 +191,45 @@ run `dummy_flask_app2.py` providing if you using the deployed version of this ap
 also do the commands for the api only instructions(follow only step 1) and add the local host url for `WEBSEARCH_API_URL` and `DOWNLOAD_SOURCE_URL`. `TEST_ACCESS_KEY ` can be anything if
 you are working locally but if you want to use the deployed version of the app you must contact the AI team for that.
 
+## Prompt Optimization & Experiment Tracking (MLFlow)
+
+We use MLFlow to track prompt engineering experiments, allowing us to compare different prompt versions, model settings, and accuracy metrics.
+
+### 1. Set up MLFlow Environment
+Add the following to your `.env` file:
+```env
+MLFLOW_TRACKING_URI=http://localhost:5000
+MLFLOW_EXPERIMENT_NAME=WIS-Prompt-Optimization
+```
+
+### 2. Start the MLFlow Tracking Server
+In a separate terminal, run:
+```bash
+mlflow server --host 127.0.0.1 --port 5000
+```
+
+### 3. Run Evaluation Experiments
+Use `scripts/evaluate.py` to run evaluations. You can specify different prompt variants from the `prompts/variants/` directory:
+
+```bash
+# Run with baseline prompts and a sample of 5 questions
+python scripts/evaluate.py \
+  --labeller-prompt prompts/variants/labeller_v1_baseline.md \
+  --reasoning-prompt prompts/variants/reasoning_v1_baseline.md \
+  --num-samples 5
+
+# Run with a custom temperature and a specific labeller variant
+python scripts/evaluate.py \
+  --labeller-prompt prompts/variants/labeller_v2_few_shot.md \
+  --temperature 0.1
+```
+
+### 4. Analyze Results
+Open `http://localhost:5000` in your browser to:
+- Compare accuracy metrics across different runs.
+- Review the specific prompt content used (stored as artifacts in the "prompts" folder of each run).
+- Download `results.tsv` for detailed failure analysis.
+
 ## Experiment results for query filter capability
 
 Currently, the accuracy for the filter mechanism is 77.9% (aiming to improve this) this is on 19 frameworks and 5 question for each framework.

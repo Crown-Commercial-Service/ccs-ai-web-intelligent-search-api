@@ -30,6 +30,7 @@ numpy==2.3.4
 SQLAlchemy==2.0.44
 
 # --- Infrastructure & Tooling ---
+mlflow
 dvc==3.63.0
 celery==5.5.3
 typing-extensions>=4.15.0
