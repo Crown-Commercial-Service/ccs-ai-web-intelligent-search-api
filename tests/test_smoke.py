@@ -22,4 +22,3 @@ def test_load_agreements_smoke():
         "lots_count",
     ):
         assert key in first
-

@@ -1,0 +1,113 @@
+# evaluation script to quantify the performance of WIS with a given configuration and prompt
+import os
+
+os.environ["AZURESEARCH_FIELDS_CONTENT_VECTOR"] = "text_vector"
+os.environ["AZURESEARCH_FIELDS_CONTENT"] = "chunk"
+
+import pandas as pd
+
+from dotenv import load_dotenv
+from langchain_community.vectorstores.azuresearch import AzureSearch
+from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
+from ccs_ai_josh.multiturn_utils import build_graph, answer_once
+from langgraph.checkpoint.memory import MemorySaver  # only if running locally
+
+
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
+from openai import AsyncAzureOpenAI
+from wis.ai_docs_filterer_for_RAG import run_rm_labeller
+from wis.ccs_website_data import fetch_all_ccs_frameworks
+
+
+load_dotenv()
+
+embeddings: AzureOpenAIEmbeddings = AzureOpenAIEmbeddings(
+    azure_deployment=os.getenv("EMBEDDING_MODEL_NAME"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    azure_endpoint=os.getenv("EMBEDDING_ENDPOINT"),
+    api_key=os.getenv("AZURE_OPENAI_KEY"),
+)
+
+# Configure Vector Store
+vector_store: AzureSearch = AzureSearch(
+    azure_search_endpoint=os.getenv("VECTOR_STORE_ENDPOINT"),
+    azure_search_key=os.getenv("VECTOR_STORE_KEY"),
+    index_name=os.getenv("VECTOR_STORE_INDEX"),
+    embedding_function=embeddings.embed_query,
+    content_key="chunk",
+)
+
+# Configure LLM
+llm = AzureChatOpenAI(
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_key=os.getenv("AZURE_OPENAI_KEY"),
+    azure_deployment=os.getenv("DEPLOYMENT_NAME"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    temperature=0.0,
+)
+
+pydantic_azure_client = AsyncAzureOpenAI(
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_key=os.getenv("AZURE_OPENAI_KEY"),
+    azure_deployment=os.getenv("DEPLOYMENT_NAME"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+)
+pydantic_rm_labeller_model = OpenAIChatModel(
+    model_name=os.getenv("DEPLOYMENT_NAME"),
+    provider=OpenAIProvider(openai_client=pydantic_azure_client),
+)
+ccs_frameworks = fetch_all_ccs_frameworks()
+rm_descriptions = "\n".join(
+    [
+        f"RM: {r.rm_number} | "
+        f"Keywords: {r.keywords if 'keywords' in r and str(r.keywords).strip() else 'N/A'} | "
+        f"Summary: {r.summary} | "
+        f"Pillar: {r.pillar} ({r.category})"
+        for _, r in ccs_frameworks.iterrows()
+    ]
+)
+
+# truthset needs to be downloaded from Google Drive and placed in `data` folder
+truthset_file_path = os.path.join("data", "truthset.tsv")
+truthset = pd.read_csv(truthset_file_path, delimiter="\t")
+truthset = truthset.head(2)
+print(truthset.head())
+
+
+async def run_eval_loop():
+    responses = []
+    rm_labels = []
+    for i in truthset["Question"]:
+        # build the graph each time, to clear context
+        memory = MemorySaver()  # for in-memory state handling
+        graph = build_graph(llm=llm, vector_store=vector_store, checkpointer=memory)
+        rm_label_result = await run_rm_labeller(
+            pydantic_rm_labeller_model, rm_descriptions, i
+        )
+        rm_labels.append(rm_label_result)
+        config = {"rm_filter": rm_label_result.rm_number}
+        response = answer_once(graph, i, config)
+        responses.append(response)
+        if len(responses) % 10 == 0:
+            print(f"Responses generated for {len(responses)} questions")
+    truthset["RM Number Result"] = [i.rm_number for i in rm_labels]
+    truthset["RM Number Reasoning"] = [i.reasoning for i in rm_labels]
+    truthset["Answer"] = [i["answer"] for i in responses]
+    truthset["Retrieved Files"] = [i["source_names"] for i in responses]
+    truthset["Retrieved Contents"] = [i["source_contents"] for i in responses]
+    print("Responses generated for all questions")
+
+    accuracy = len(
+        truthset[truthset["RM Number Result"] == truthset["Expected Framework"]]
+    ) / len(truthset)
+    print(f"Accuracy: {accuracy}")
+
+    outpath = os.path.join("data", "results.tsv")
+    truthset.to_csv(outpath, sep="\t", index=False)
+    print(f"Responses written to {outpath}")
+
+
+import asyncio
+
+asyncio.run(run_eval_loop())

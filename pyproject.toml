@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wis"
+version = "0.0.1"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff.lint]
+# E402: Module level import not at top of file
+ignore = ["E402"]

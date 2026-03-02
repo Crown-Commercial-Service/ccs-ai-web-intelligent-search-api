@@ -1,40 +1,43 @@
+from pathlib import Path
+
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, ModelSettings
+
 
 class DataFilterer(BaseModel):
     rm_number: str = Field(description="The extracted or inferred RM number.")
     reasoning: str = Field(description="Briefly why you picked this RM.")
 
+
+# Path to the framework labeller prompt file
+PROMPT_PATH = Path(__file__).parents[2] / "prompts" / "framework_labeller.md"
+
+
 async def run_rm_labeller(model, rm_descriptions, user_input):
-    """ Use this function, it labels a conversation based on the RM description
+    """Use this function, it labels a conversation based on the RM description
 
     :param model: LLM model to label conversation based on RM
-    :param rm_descriptions: user's query
-    :param user_input: all the RM labels and their descriptions
+    :param rm_descriptions: all the RM labels and their descriptions
+    :param user_input: user's query
     :return(str): AI result
     """
+
+    # Read the prompt from the markdown file
+    with open(PROMPT_PATH, "r") as f:
+        system_prompt_template = f.read()
+
     rm_labeller = Agent(
         model=model,
-        output_type= DataFilterer,
+        output_type=DataFilterer,
         model_settings=ModelSettings(temperature=0.0),
-        system_prompt=(
-            "You are a Senior Procurement Analyst. You are an expert across 200 government frameworks. "
-            "Your task is to map any user query—no matter how technical or niche—to the correct RM number. "
-            f"\n\n### MASTER FRAMEWORK DIRECTORY:\n{rm_descriptions}\n\n"
-            "### INSTRUCTIONS:\n"
-            "1. Identify the core industry or service in the query.\n"
-            "2. Match it to the most relevant RM description from the directory.\n"
-            "3. If the user mentions 'cleaning', 'legal', 'finance', or 'consulting', find the specific RM.\n"
-            "4. Return UNKNOWN if the query is purely social or unrelated to procurement."
-        )
-
+        system_prompt=system_prompt_template.format(rm_descriptions=rm_descriptions),
     )
     result = await rm_labeller.run(user_input)
     return result.output
 
 
-async def run_rm_labeller_v2(model, user_input,rm_descriptions ,message_history=None):
-    """ This function was used for experiment if giving the lightweight AI memory
+async def run_rm_labeller_v2(model, user_input, rm_descriptions, message_history=None):
+    """This function was used for experiment if giving the lightweight AI memory
     but it made the model perform worse as it struggled to let go of chat history
     that was not useful to question
 

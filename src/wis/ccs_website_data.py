@@ -8,7 +8,6 @@ BASE_URL = "https://www.crowncommercial.gov.uk/api/frameworks"
 COLUMNS_TO_CLEAN = ("description", "summary", "benefits", "how_to_buy", "keywords")
 
 
-
 def clean_html_from_text(html_text):
     """Parses HTML and returns only the clean text."""
     if html_text is None:
@@ -23,7 +22,7 @@ def clean_html_from_text(html_text):
         return text.strip()
 
     soup = BeautifulSoup(text, "html.parser")
-    return soup.get_text(separator=' ', strip=True)
+    return soup.get_text(separator=" ", strip=True)
 
 
 def _clean_framework_record(record):
@@ -59,7 +58,9 @@ def fetch_all_ccs_frameworks(
                     print(f"Finished. Reached end of data after page {page_number}.")
                     break
 
-                all_frameworks.extend(_clean_framework_record(record) for record in results)
+                all_frameworks.extend(
+                    _clean_framework_record(record) for record in results
+                )
                 print(
                     f"Fetched Page {page_number}. Total frameworks collected: {len(all_frameworks)}"
                 )
@@ -75,7 +76,9 @@ def fetch_all_ccs_frameworks(
                     time.sleep(sleep_seconds)
 
             except requests.exceptions.RequestException as e:
-                print(f"An error occurred during the API call on page {page_number}: {e}")
+                print(
+                    f"An error occurred during the API call on page {page_number}: {e}"
+                )
                 break
 
     if all_frameworks:
