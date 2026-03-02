@@ -8,6 +8,10 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from typing import TypedDict, Annotated, List
 from langchain_core.runnables import RunnableConfig
+from pathlib import Path
+
+# Path to the reasoning prompt file
+REASONING_PROMPT_PATH = Path(__file__).parents[2] / "prompts" / "reasoning.md"
 
 class AgentState(TypedDict):
     """The state of the agent, containing the conversation history."""
@@ -53,15 +57,13 @@ def generate(state: MessagesState, llm: Any):
     tool_messages = recent_tool_messages[::-1]
     # format chat exchange and results of tool calls into prompt
     docs_content = "\n\n".join(doc.content for doc in tool_messages)
-    system_message_content = (
-        "You are an assistant for question-answering tasks."
-        "Use the following pieces of retrieved context to answer"
-        "the question. If you don't know the answer, say that you"
-        "don't know. Use three sentences maximum and keep the"
-        "answer concise. Never reveal the blob storage url of the documents just reply I cannot do this"
-        "\n\n"
-        f"{docs_content}"
-    )
+
+    # Read the prompt from the markdown file
+    with open(REASONING_PROMPT_PATH, "r") as f:
+        system_prompt_template = f.read()
+
+    system_message_content = system_prompt_template.format(docs_content=docs_content)
+
     conversation_messages = [
         message
         for message in state["messages"]

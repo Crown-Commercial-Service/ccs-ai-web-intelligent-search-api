@@ -97,6 +97,10 @@ async def run_eval_loop():
     truthset["Retrieved Files"] = [i["source_names"] for i in responses]
     truthset["Retrieved Contents"] = [i["source_contents"] for i in responses]
     print("Responses generated for all questions")
+
+    accuracy = len(truthset[truthset["RM Number Result"] == truthset["Expected Framework"]]) / len(truthset)
+    print(f"Accuracy: {accuracy}")
+
     outpath = os.path.join("data", "results.tsv")
     truthset.to_csv(outpath, sep="\t", index=False)
     print(f"Responses written to {outpath}")
