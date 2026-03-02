@@ -18,7 +18,7 @@ from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from openai import AsyncAzureOpenAI
 from src.wis.ai_docs_filterer_for_RAG import run_rm_labeller
-from ccs_website_data import fetch_all_ccs_frameworks
+from src.wis.ccs_website_data import fetch_all_ccs_frameworks
 
 
 load_dotenv()
