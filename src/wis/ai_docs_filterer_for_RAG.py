@@ -10,20 +10,22 @@ class DataFilterer(BaseModel):
 
 
 # Path to the framework labeller prompt file
-PROMPT_PATH = Path(__file__).parents[2] / "prompts" / "framework_labeller.md"
+DEFAULT_PROMPT_PATH = Path(__file__).parents[2] / "prompts" / "framework_labeller.md"
 
 
-async def run_rm_labeller(model, rm_descriptions, user_input):
+async def run_rm_labeller(model, rm_descriptions, user_input, prompt_path=None):
     """Use this function, it labels a conversation based on the RM description
 
     :param model: LLM model to label conversation based on RM
     :param rm_descriptions: all the RM labels and their descriptions
     :param user_input: user's query
+    :param prompt_path: (Optional) Path to the prompt markdown file
     :return(str): AI result
     """
 
     # Read the prompt from the markdown file
-    with open(PROMPT_PATH, "r") as f:
+    path_to_use = prompt_path or DEFAULT_PROMPT_PATH
+    with open(path_to_use, "r") as f:
         system_prompt_template = f.read()
 
     rm_labeller = Agent(

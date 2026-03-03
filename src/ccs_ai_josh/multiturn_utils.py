@@ -11,7 +11,7 @@ from langchain_core.runnables import RunnableConfig
 from pathlib import Path
 
 # Path to the reasoning prompt file
-REASONING_PROMPT_PATH = Path(__file__).parents[2] / "prompts" / "reasoning.md"
+DEFAULT_REASONING_PROMPT_PATH = Path(__file__).parents[2] / "prompts" / "reasoning.md"
 
 
 class AgentState(TypedDict):
@@ -53,7 +53,7 @@ def create_bound_retrieve_tool(vector_store):
     return retrieve_bound
 
 
-def generate(state: MessagesState, llm: Any):
+def generate(state: MessagesState, llm: Any, prompt_path: Path = None):
     """Generate answer"""
     # capture the most recent tool messages
     recent_tool_messages = []
@@ -68,7 +68,8 @@ def generate(state: MessagesState, llm: Any):
     docs_content = "\n\n".join(doc.content for doc in tool_messages)
 
     # Read the prompt from the markdown file
-    with open(REASONING_PROMPT_PATH, "r") as f:
+    path_to_use = prompt_path or DEFAULT_REASONING_PROMPT_PATH
+    with open(path_to_use, "r") as f:
         system_prompt_template = f.read()
 
     system_message_content = system_prompt_template.format(docs_content=docs_content)
@@ -191,13 +192,13 @@ def answer_once(graph, user_input: str, thread_id: str = "abc123", config: dict 
     return response
 
 
-def build_graph(llm, vector_store, checkpointer):
+def build_graph(llm, vector_store, checkpointer, prompt_path: Path = None):
     # create a properly decorated tool bound to the vector store
     retrieve_bound = create_bound_retrieve_tool(vector_store)
 
     # bind llm and retrieve_tool into the nodes that need them
     query_node = partial(query_or_respond, llm=llm, retrieve_tool=retrieve_bound)
-    generate_node = partial(generate, llm=llm)
+    generate_node = partial(generate, llm=llm, prompt_path=prompt_path)
     tool_node = ToolNode([retrieve_bound])
 
     graph_builder = StateGraph(AgentState)
