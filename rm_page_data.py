@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from ccs_website_data import fetch_all_ccs_frameworks
+from src.wis.ccs_website_data import fetch_all_ccs_frameworks
+from src.wis.file_finder import  extract_files
 import requests
 from azure.storage.blob import ContainerClient, ExponentialRetry
 from pathlib import Path
@@ -13,7 +14,8 @@ import time
 load_dotenv()
 ccs_frameworks = fetch_all_ccs_frameworks()
 
-ccs_frameworks = ccs_frameworks[0:4]
+# ccs_frameworks = ccs_frameworks[0:4]
+# ccs_frameworks = ccs_frameworks[ccs_frameworks["rm_number"] == "RM1557.13"]
 allowed_filetypes = (".odt", ".docx", ".pdf", ".txt")
 
 # get df and loop through all titles and download files into blob storage so it can be used for RAG
@@ -93,6 +95,10 @@ def agreement_docs(frame_work):
         data = response.json()
         # print(f"This is the data: {data}")
         documents = data["documents"]
+        if len(documents) == 0:
+            """double checking files are located else where """
+            print("lets look for files elsewhere in the API output")
+            documents = extract_files(data)
         return documents
     except Exception as e:
         print(f"This the error that caused the failed download {e}")
@@ -110,6 +116,7 @@ def get_rm_page_data():
             frame_work = row["rm_number"]
             print(f"position:{index} frame_work:{frame_work}")
             documents = agreement_docs(frame_work)
+            # print(f"documents:{documents}")
 
             if not documents:
                 continue
