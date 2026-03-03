@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from langchain_community.vectorstores.azuresearch import AzureSearch
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from ccs_ai_josh.multiturn_utils import build_graph, answer_once
+from ccs_ai_josh.eval_utils import score_correctness
 from langgraph.checkpoint.memory import MemorySaver
 
 # Pydantic AI and other imports
@@ -135,11 +136,16 @@ async def run_eval_loop(args):
 
         responses = []
         rm_labels = []
+        correctness_scores = []
+        correctness_reasoning = []
 
         labeller_prompt_path = Path(args.labeller_prompt).resolve()
         reasoning_prompt_path = Path(args.reasoning_prompt).resolve()
 
-        for i, query in enumerate(truthset["Question"]):
+        for i, row in truthset.iterrows():
+            query = row["Question"]
+            expected_answer = row["Expected Answer"]
+
             # build the graph each time, to clear context
             memory = MemorySaver()
             graph = build_graph(
@@ -161,6 +167,25 @@ async def run_eval_loop(args):
             response = answer_once(graph, query, config=config)
             responses.append(response)
 
+            # Score correctness if a reference answer is provided
+            if pd.notna(expected_answer) and str(expected_answer).strip():
+                try:
+                    score_dict = score_correctness(
+                        llm=llm,
+                        question=query,
+                        generated_answer=response["answer"],
+                        reference_answer=expected_answer,
+                    )
+                    correctness_scores.append(score_dict["score"])
+                    correctness_reasoning.append(score_dict["reasoning"])
+                except Exception as e:
+                    print(f"Error scoring correctness for query {i}: {e}")
+                    correctness_scores.append(None)
+                    correctness_reasoning.append(None)
+            else:
+                correctness_scores.append(None)
+                correctness_reasoning.append(None)
+
             if (i + 1) % 10 == 0:
                 print(f"Processed {i + 1}/{len(truthset)} questions")
 
@@ -169,14 +194,36 @@ async def run_eval_loop(args):
         truthset["Answer"] = [i["answer"] for i in responses]
         truthset["Retrieved Files"] = [i["source_names"] for i in responses]
         truthset["Retrieved Contents"] = [i["source_contents"] for i in responses]
+        truthset["Correctness Score"] = correctness_scores
+        truthset["Correctness Reasoning"] = correctness_reasoning
 
         # Calculate accuracy
         correct = (truthset["RM Number Result"] == truthset["Expected Framework"]).sum()
         accuracy = correct / len(truthset)
         print(f"Accuracy: {accuracy:.4f}")
 
+        # Calculate correctness metrics
+        valid_scores = [s for s in correctness_scores if s is not None]
+        if valid_scores:
+            pct_perfect = len([s for s in valid_scores if s == "PERFECT"]) / len(
+                valid_scores
+            )
+            pct_correct_or_better = len(
+                [s for s in valid_scores if s in ("PERFECT", "CORRECT")]
+            ) / len(valid_scores)
+        else:
+            pct_perfect = 0
+            pct_correct_or_better = 0
+
+        print(f"Perfect Answers: {pct_perfect:.4%}")
+        print(f"Perfect or Correct Answers: {pct_correct_or_better:.4%}")
+
         # Log metrics
-        mlflow.log_metric("accuracy", accuracy)
+        mlflow.log_metric("RM labelling accuracy", accuracy)
+        mlflow.log_metric("Percentage of Answers Perfect", pct_perfect)
+        mlflow.log_metric(
+            "Percentage of Answers Perfect or Correct", pct_correct_or_better
+        )
 
         # Save and log results artifact
         outpath = os.path.join("data", "results.tsv")

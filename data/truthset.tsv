@@ -1,63 +1,61 @@
 Question	Expected Framework	Expected Document	Expected Answer
-Can I really buy services from GCloud 14 without running a full tender process?	RM1557		
-"What is the procurement process for using G-Cloud, step-by-step?"	RM1557		
-How do I manage the contract and supplier performance after awarding a G-Cloud contract?	RM1557		
-What are the reporting requirements for G-Cloud contracts?	RM1557		
-"Can I exit a G-Cloud contract early, and if so, what are the implications?"	RM1557		
-"What resources or guidance does CCS provide for G-Cloud users, both before and after procurement?"	RM1557		
-"What is the typical contract length for G-Cloud services, and can they be extended?"	RM1557		
-"Can I negotiate terms and conditions with G-Cloud suppliers, or are they fixed?"	RM1557		
-"Can I make a G-Cloud ""Direct Award,"" or do I have to run a competition?"	RM1557		
-"How long can a G-Cloud ""Call-Off"" contract last?"	RM1557		
-Is the pricing on the G-Cloud Digital Marketplace fixed?	RM1557		
-"How do I evaluate ""Social Value"" in G-Cloud?"	RM1557		
-"What is the G-Cloud ""6-step process"" for a compliant buy?"	RM1557		
-"How do I handle G-Cloud ""Service Definitions"" and ""Supplier Terms""?"	RM1557		
-What if I can't find a G-Cloud supplier that meets 100% of my requirements?	RM1557		
-What is the maximum length of a Call-Off Contract on G Cloud 14?	RM1557		
-"On GCloud14, can I ask suppliers for references or case studies during my evaluation?"	RM1557		
-"Is the pricing I see on the marketplace fixed for G-Cloud, or can I negotiate a discount?"	RM1557		
-What happens if the service I want isn't on the G-Cloud-14 framework—can the supplier add it?	RM1557		
-Do I need to hold a formal 'standstill period' before signing a contract under GCloud-14?	RM1557		
-Can I use G-Cloud to buy bespoke software development or hardware?	RM1557		
-What is my responsibility regarding Social Value under G-Cloud?	RM1557		
-"What is G-Cloud Lot 4, and how is it different from the other lots?"	RM1557		
-Can I use G-Cloud to hire an individual developer or contractor?	RM1557		
-"If I'm doing a call-off from GCloud 14, do I need to check the supplier's financial health myself?"	RM1557		
-What happens to my contract if a new version of G-Cloud is released?	RM1557		
-Is an 'Exit Plan' mandatory for all G-Cloud contracts?	RM1557		
-How does G-Cloud handle 'Offshoring' and data sovereignty?	RM1557		
-Can I buy a 'Hybrid' solution that includes some hardware if I use G Cloud 14?	RM1557		
-Does G-Cloud comply with the new Procurement Act 2023?	RM1557		
-"How does the Digital Outcomes & Specialists agreement support the transition to agile delivery phases (Discovery, Alpha, Beta, Live)?"	RM1043		
-"Under Digital Outcomes & Specialists, what is the process for ensuring that ""Specialists"" provided by the supplier meet our specific technical stack requirements?"	RM1043		
+Can I really buy services from GCloud 14 without running a full tender process?	RM1557.14	RM1557.12	Yes, you absolutely can buy services from G-Cloud 14 without running a full, traditional tender process, but only for certain types of services. The G-Cloud framework is specifically designed to allow for Direct Award, which is its primary selling point. It effectively replaces the traditional "Invitation to Tender" (ITT) or "Request for Proposal" (RFP) with a streamlined digital search and evaluation process
+What is the procurement process for using G-Cloud, step-by-step?	RM1557.14	RM1557.12	Step 1: Prepare Your Requirements. Step 2: Search and Longlist. Step 3: Filter and Shortlist. Step 4: Evaluation (The "MEAT" Process). Step 5: Direct Award. Step 6: Post-Award Formalities
+How do I manage the contract and supplier performance after awarding a G-Cloud contract?	RM1557.14	Digital Outcomes and Specialists 5 legal documents	1. Finalize the Call-Off Contract & Exit Plan. 2. Set & Monitor Performance Metrics (KPIs). 3. Financial and Commercial Governance. 4. Relationship & Risk Management. 5. Handling Extensions
+What are the reporting requirements for G-Cloud contracts?	RM1557.14		1. Monthly Management Information (MI). 2. Annual & Periodic Requirements. 3. Buyer-Specific Reporting. 
+Can I exit a G-Cloud contract early, and if so, what are the implications?	RM1557.14		In the world of UK public sector procurement, G-Cloud contracts (known as Call-Off Contracts) are designed to be flexible, but they aren't "handshake-and-walk-away" agreements.1. Termination for Convenience (Ending "Without Cause")  The short answer is yes, you can exit early, but the "how" and the "cost" depend heavily on which version of the framework you are using (e.g., G-Cloud 13, 14, or the newly launching G-Cloud 15).
+What resources or guidance does CCS provide for G-Cloud users, both before and after procurement?	RM1557.14		The Crown Commercial Service (CCS) provides a comprehensive suite of tools and documents designed to ensure G-Cloud procurements are compliant, efficient, and legally sound. Because G-Cloud relies on a Direct Award model (except for Lot 4), the guidance focuses heavily on maintaining a fair and auditable selection process.
+What is the typical contract length for G-Cloud services, and can they be extended?	RM1557.14		For G-Cloud 14 (Lots 1, 2, and 3), the typical initial contract length is up to 36 months (3 years).  Under previous versions like G-Cloud 12, the initial limit was often 24 months, but this has been increased to allow more flexibility for long-term cloud implementations. There is no minimum term, so you can set a contract for 6 or 12 months if needed.
+Can I negotiate terms and conditions with G-Cloud suppliers, or are they fixed?	RM1557.14		In short: No, you generally cannot negotiate the core terms, conditions, or pricing. The G-Cloud framework is designed for "off-the-shelf" services where the price and terms are fixed at the point the supplier joins the framework. This ensures a level playing field and a fast "direct award" process.
+Can I make a G-Cloud "Direct Award," or do I have to run a competition?	RM1557.14		Lots 1, 2, and 3 (Cloud Hosting, Software, and Support): Yes. These lots are designed specifically for Direct Award only. You follow a "6-step buying process" (search, longlist, shortlist, evaluate, and award) based on the supplier's published catalog price and terms. You cannot run a mini-competition or negotiate prices in these lots.
+How long can a G-Cloud "Call-Off" contract last?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	A call-off from G-Cloud 14 can last up to 36 months, and there is an optional extension period of up to 12 months beyond this.
+Is the pricing on the G-Cloud Digital Marketplace fixed?	RM1557.14		The short answer is yes, pricing on the G-Cloud Digital Marketplace is fixed in the sense that it must be transparent and non-negotiable at the point of purchase. However, there are specific rules about how those "fixed" prices can change over time. 
+How do I evaluate "Social Value" in G-Cloud?	RM1557.14		 Evaluating Social Value is now a mandatory requirement for Central Government contracts under G-Cloud (G-Cloud 13 and 14), typically accounting for a minimum weighting of 10% of the total score.
+What is the G-Cloud "6-step process" for a compliant buy?	RM1557.14		1. Prepare. 2. Search and Longlist. 3. Longlist to Shortlist. 4. Evaluation and Selection. 5. Award and Buy. 6. Complete the Customer Benefit Record
+How do I handle G-Cloud "Service Definitions" and "Supplier Terms"?	RM1557.14		Handling G-Cloud documentation is less about "winning a bid" and more about "publishing a shop front." In the G-Cloud framework (currently G-Cloud 14), your Service Definition and Supplier Terms are mandatory documents that are "locked" once the framework goes live.
+What if I can't find a G-Cloud supplier that meets 100% of my requirements?	RM1557.14		 It is quite common in G-Cloud procurement to find that no single supplier is a "perfect" 100% match. The framework is designed for commodity services, which are often "off-the-shelf" rather than bespoke.  
+What is the maximum length of a Call-Off Contract on G Cloud 14?	RM1557.14	RM1557.14-G-Cloud-14 webpage	Call-off contracts on G-Cloud 14 can be a maximum of 48 months. This is split into the initial term (36 months maximum) and an optional extension (12 months maximum).
+On GCloud14, can I ask suppliers for references or case studies during my evaluation?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	You are not permitted to ask for extra evidence. Instead, you should base your evaluation on the information that the supplier has uploaded to CAS.
+Is the pricing I see on the marketplace fixed for G-Cloud, or can I negotiate a discount?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	No, you cannot negotiate a discount with individual suppliers. If a supplier reduces their prices, they must do this for all customers, not just you.
+What happens if the service I want isn't on the G-Cloud-14 framework—can the supplier add it?	RM1557.14	RM1557.14-G-Cloud-14-Framework-Agreement-v3.0	The supplier can update its standard service offer, but cannot make material changes to it.
+Do I need to hold a formal 'standstill period' before signing a contract under GCloud-14?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	You don't have to formal standstill period, but you are allowed to if you want to give unsuccessful suppliers an opportunity to review and respond to your feedback.
+Can I use G-Cloud to buy bespoke software development or hardware?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	No, G-Cloud specifically excludes bespoke design and development
+What is my responsibility regarding Social Value under G-Cloud?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	You should consider social value as part of your evaluation of suppliers. If you are from central government, social value should account for at least 10% of award criteria.
+What is G-Cloud Lot 4, and how is it different from the other lots?	RM1557.14	RM1557.14-G-Cloud-14 webpage, RM1557.14-G-Cloud-14 Lot 4 webpage	Lot 4 covers professional services related to cloud computing, such as migration planning and security. Lots 1-3 cover specific aspects of cloud computing, such as hosting, software and support
+Can I use G-Cloud to hire an individual developer or contractor?	RM1557.14	RM1557.14-G-Cloud-14 webpage	No, you cannot use GCloud for recruitment, only for cloud support related to cloud services
+If I'm doing a call-off from GCloud 14, do I need to check the supplier's financial health myself?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	CCS carries out financial checks on all suppliers, but you are recommended to carry out your own checks once you have a shortlist of suppliers
+What happens to my contract if a new version of G-Cloud is released?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	Your contract will not move over to the new version automatically. Once your contract is expired, you should conduct a re-evaluation of services available on the Contracts Award Service (CAS)
+Is an 'Exit Plan' mandatory for all G-Cloud contracts?	RM1557.14	RM1557.14-G-Cloud-14-buyer-guide-v6.0-2	Yes, you must have an expert plan in place before you place an order. This is to prevent supplier lock-in.
+Can I buy a 'Hybrid' solution that includes some hardware if I use G Cloud 14?	RM1557.14	RM1557.14-G-Cloud-14 webpage	No, hardware is excluded from G-Cloud, but you can use the following agreements for this: RM6068 Technology Products and Associated Services, RM6194 Back Office Software
+How does the Digital Outcomes & Specialists agreement support the transition to agile delivery phases (Discovery, Alpha, Beta, Live)?	RM1043		 The Digital Outcomes & Specialists (DOS) framework—now primarily sitting under the Digital Outcomes agreement in the UK’s Digital Marketplace—is specifically designed to mirror the Government Digital Service (GDS) Service Manual.  Unlike traditional "waterfall" procurement, which demands a fixed end-product from day one, DOS allows public sector bodies to buy outcomes based on the current phase of the project.
+Under Digital Outcomes & Specialists, what is the process for ensuring that "Specialists" provided by the supplier meet our specific technical stack requirements?	RM1043		
 Can we use the Digital Outcomes & Specialists framework to procure a managed team for a fixed-term digital transformation project?	RM1043		
-"Does the Technology Products & Associated Services 2 agreement allow for the procurement of ""Device as a Service"" (DaaS) models?"	RM6098		
+Does the Technology Products & Associated Services 2 agreement allow for the procurement of "Device as a Service" (DaaS) models?	RM6098		
 How can we leverage the aggregation service within Technology Products & Associated Services 2 to achieve higher volume discounts on hardware?	RM6098		
-"Are the sustainability and ""circular economy"" requirements for IT hardware disposal included in the Technology Products & Associated Services 2 terms?"	RM6098		
+Are the sustainability and "circular economy" requirements for IT hardware disposal included in the Technology Products & Associated Services 2 terms?	RM6098		
 Does the Management Consultancy Framework Three provide specific lots for complex infrastructure or environmental sustainability consultancy?	RM6187		
-"Under Management Consultancy Framework Three, how is knowledge transfer to our internal staff monitored and measured during the contract?"	RM6187		
+Under Management Consultancy Framework Three, how is knowledge transfer to our internal staff monitored and measured during the contract?	RM6187		
 Can we conduct a direct award for urgent requirements under the Management Consultancy Framework Three if we can prove a specific supplier is the only capable party?	RM6187		
 How does the Construction Works and Associated Services framework manage the use of Project Bank Accounts to ensure prompt payment to the supply chain?	RM6088		
-"Does the Construction Works and Associated Services agreement support the use of Modern Methods of Construction (MMC), such as modular building?"	RM6088		
-"Which standard form of contract (e.g., NEC4 or JCT) is the default for works ordered via Construction Works and Associated Services?"	RM6088		
-"Can we integrate ""Total Facilities Management"" (TFM) requirements into a single call-off under the Facilities Management & Workplace Services agreement?"	RM6232		
+Does the Construction Works and Associated Services agreement support the use of Modern Methods of Construction (MMC), such as modular building?	RM6088		
+Which standard form of contract (e.g., NEC4 or JCT) is the default for works ordered via Construction Works and Associated Services?	RM6088		
+Can we integrate "Total Facilities Management" (TFM) requirements into a single call-off under the Facilities Management & Workplace Services agreement?	RM6232		
 How does the Facilities Management & Workplace Services agreement handle price adjustments for inflation in labor-intensive services like cleaning?	RM6232		
 Does the Facilities Management & Workplace Services portal provide a standardized way to compare Social Value offerings between suppliers?	RM6232		
-"What are the current lead times for Ultra-Low Emission Vehicles (ULEVs) available through the Vehicle Lease, Fleet Management and Salary Sacrifice Car Schemes?"	RM6268		
-"Under the Vehicle Lease, Fleet Management and Salary Sacrifice Car Schemes, does the salary sacrifice portal handle all tax and NI reporting requirements for us?"	RM6268		
-"Can we include fleet management services for our existing owned vehicles using the Vehicle Lease, Fleet Management and Salary Sacrifice Car Schemes framework?"	RM6268		
+What are the current lead times for Ultra-Low Emission Vehicles (ULEVs) available through the Vehicle Lease, Fleet Management and Salary Sacrifice Car Schemes?	RM6268		
+Under the Vehicle Lease, Fleet Management and Salary Sacrifice Car Schemes, does the salary sacrifice portal handle all tax and NI reporting requirements for us?	RM6268		
+Can we include fleet management services for our existing owned vehicles using the Vehicle Lease, Fleet Management and Salary Sacrifice Car Schemes framework?	RM6268		
 Does Network Services 3 cover the procurement of 5G private networks and Internet of Things (IoT) connectivity solutions?	RM6116		
-"Under Network Services 3, can we run a ""cross-lot"" competition if our requirement spans both LAN and telephony services?"	RM6116		
-"What are the options for ""Cloud-First"" networking strategies within the Network Services 3 framework?"	RM6116		
+Under Network Services 3, can we run a "cross-lot" competition if our requirement spans both LAN and telephony services?	RM6116		
+What are the options for "Cloud-First" networking strategies within the Network Services 3 framework?	RM6116		
 How does the Non-Clinical Staffing framework ensure that all temporary workers have undergone the necessary BPSS or DBS vetting before starting?	RM6277		
-"Are the ""agency margins"" fixed for the duration of the Non-Clinical Staffing agreement, or can they be negotiated during further competition?"	RM6277		
+Are the "agency margins" fixed for the duration of the Non-Clinical Staffing agreement, or can they be negotiated during further competition?	RM6277		
 Can we use Non-Clinical Staffing to hire senior interim executives for roles that sit outside the standard NHS banding?	RM6277		
-"Does the Workforce Solutions framework allow us to implement a ""Master Vendor"" or ""Neutral Vendor"" managed service model?"	RM6160		
+Does the Workforce Solutions framework allow us to implement a "Master Vendor" or "Neutral Vendor" managed service model?	RM6160		
 How does Workforce Solutions help us manage IR35 status determinations for the contingent workers we hire?	RM6160		
-"Can we use a ""Statement of Work"" (SoW) model under Workforce Solutions to pay for outcomes rather than just time and materials?"	RM6160		
+Can we use a "Statement of Work" (SoW) model under Workforce Solutions to pay for outcomes rather than just time and materials?	RM6160		
 Does the Public Sector Legal Services agreement provide access to specialized advice for international trade or subsidy control?	RM6240		
-"Can we request ""Alternative Fee Arrangements,"" such as capped fees, for specific litigation cases under Public Sector Legal Services?"	RM6240		
+Can we request "Alternative Fee Arrangements," such as capped fees, for specific litigation cases under Public Sector Legal Services?	RM6240		
 How does Public Sector Legal Services ensure that we have a dedicated Relationship Manager to oversee all our instructed legal matters?	RM6240		
 How can I find training courses for adult learners in the public sector?	RM6348		
 Where do I access the Adult Skills and Learning Dynamic Purchasing System?	RM6348		
@@ -158,14 +156,15 @@ On RM6281 is there provision for transfer fees?	RM6281	RM6281 Transfer Fees Guid
 What agreement is RM6281 and what does it cover?	RM6281	RM6281 Web Page	
 What roles are covered under RM6281?	RM6281	RM6281 Job roles per lot v1.1	
 Who can use RM6277?	RM6277	RM6277 Web Page	
-What framework agreements cover workforce?	"RM6348,RM6002,RM6013,RM6277,RM6281,RM6278,RM6163,RM6162 "		
+What framework agreements cover workforce?	RM6348,RM6002,RM6013,RM6277,RM6281,RM6278,RM6163,RM6162		
 What agreements can I use for fleet vehicles?	9 in total (to add)		
 How can I buy from RM6268	RM6268		
-"I want to buy body-worn cameras for traffic wardens, what agreement should I use?"	RM6347		
-"I'm based in Northern Ireland, are there different rules for using RM6268?"	RM6268	RM6268 Call-off Schedule 21 Northern Ireland law v1.0	
-"I need to buy in some internal audit capability, which agreement is best for me?"	RM6310		
+I want to buy body-worn cameras for traffic wardens, what agreement should I use?	RM6347		
+I'm based in Northern Ireland, are there different rules for using RM6268?	RM6268	RM6268 Call-off Schedule 21 Northern Ireland law v1.0	
+I need to buy in some internal audit capability, which agreement is best for me?	RM6310		
 I run a rural midwifery service and need some vehicles for midwives to do home visits. Is this possible on one of your commercial agreements?	RM6244	RM6244 Web Page	
 What agreements are available to buy cloud infrastructure support services from?	RM6292		
 How can I find the right supplier on the G-Cloud agreement?	RM1557		
 Is there an option to direct award on the audit and assurance agreement?	RM6310	RM6310 Web Page	
-I'm planning a large construction project of a hospital. What agreement can I use to source construction services?	"RM6165,RM6242,RM6088"		
+I'm planning a large construction project of a hospital. What agreement can I use to source construction services?	RM6165,RM6242,RM6088		
+X agreement has expired, what is the replacement?			
