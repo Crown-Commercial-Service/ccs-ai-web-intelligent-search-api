@@ -28,6 +28,7 @@ azure-identity==1.23.0
 pandas==2.3.3
 numpy==2.3.4
 SQLAlchemy==2.0.44
+python-docx==1.1.2
 
 # --- Infrastructure & Tooling ---
 mlflow
@@ -36,6 +37,9 @@ celery==5.5.3
 typing-extensions>=4.15.0
 pytest==9.0.2
 pip-tools
+
+# --- Compatibility Fixes ---
+packaging>=25,<26  # Required because xai-sdk 1.6.1 is incompatible with packaging 26.0
 
 # --- Custom External Tools (Remote Git) ---
 # Note: Removed '-e' for Azure Deployment compatibility
