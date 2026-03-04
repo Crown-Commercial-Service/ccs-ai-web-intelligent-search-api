@@ -24,6 +24,8 @@ from src.wis.ccs_website_data import fetch_all_ccs_frameworks
 load_dotenv()
 
 ccs_frameworks = fetch_all_ccs_frameworks()
+#only live agreements for experiment
+ccs_frameworks = ccs_frameworks[ccs_frameworks["status"] == "Live"]
 graphs = {}
 embeddings: AzureOpenAIEmbeddings = AzureOpenAIEmbeddings(
     azure_deployment=os.getenv("EMBEDDING_MODEL_NAME"),
