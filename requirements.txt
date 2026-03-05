@@ -189,7 +189,7 @@ feedback-mechanism @ git+https://github.com/DavisAgyemang/Universal_Feedback_too
     # via -r requirements.in
 filelock==3.24.3
     # via iterative-telemetry
-flask==3.1.2
+flask==3.1.3
     # via
     #   -r requirements.in
     #   flask-cors
@@ -242,6 +242,8 @@ graphql-core==3.2.7
     #   graphql-relay
 graphql-relay==3.2.0
     # via graphene
+greenlet==3.3.2
+    # via sqlalchemy
 griffe==2.0.0
     # via pydantic-ai-slim
 griffecli==2.0.0
