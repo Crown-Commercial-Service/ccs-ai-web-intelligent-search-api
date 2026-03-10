@@ -7,10 +7,18 @@ os.environ["AZURESEARCH_FIELDS_CONTENT"] = "chunk"
 
 import argparse
 import asyncio
+import time
 import pandas as pd
 import mlflow
 from pathlib import Path
 from dotenv import load_dotenv
+from openai import (
+    AsyncAzureOpenAI,
+    APIConnectionError,
+    APITimeoutError,
+    InternalServerError,
+    RateLimitError,
+)
 
 # LangChain and LangGraph imports
 from langchain_community.vectorstores.azuresearch import AzureSearch
@@ -22,9 +30,12 @@ from langgraph.checkpoint.memory import MemorySaver
 # Pydantic AI and other imports
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
-from openai import AsyncAzureOpenAI
 from wis.ai_docs_filterer_for_RAG import run_rm_labeller
 from wis.ccs_website_data import fetch_all_ccs_frameworks
+from wis.parallel_eval_utils import (
+    is_token_or_rate_limit_error,
+    with_exponential_backoff,
+)
 
 load_dotenv()
 
@@ -54,10 +65,41 @@ def parse_args():
         default=None,
         help="Number of samples from truthset to evaluate (default: all).",
     )
+    parser.add_argument(
+        "--max-concurrency",
+        type=int,
+        default=10,
+        help="Maximum number of truthset rows to process in parallel.",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=5,
+        help="Maximum retries for retryable API errors.",
+    )
+    parser.add_argument(
+        "--initial-backoff-seconds",
+        type=float,
+        default=1.0,
+        help="Initial retry backoff in seconds.",
+    )
+    parser.add_argument(
+        "--max-backoff-seconds",
+        type=float,
+        default=30.0,
+        help="Maximum retry backoff in seconds.",
+    )
     return parser.parse_args()
 
 
 async def run_eval_loop(args):
+    retryable_exception_types = (
+        RateLimitError,
+        APITimeoutError,
+        APIConnectionError,
+        InternalServerError,
+    )
+
     # MLFlow setup
     mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
     mlflow_experiment_name = os.getenv(
@@ -134,72 +176,161 @@ async def run_eval_loop(args):
         mlflow.log_artifact(args.labeller_prompt, "prompts")
         mlflow.log_artifact(args.reasoning_prompt, "prompts")
 
-        responses = []
-        rm_labels = []
-        correctness_scores = []
-        correctness_reasoning = []
+        n_rows = len(truthset)
+        responses = [None] * n_rows
+        rm_labels = [None] * n_rows
+        correctness_scores = [None] * n_rows
+        correctness_reasoning = [None] * n_rows
+        eval_errors = [None] * n_rows
 
         labeller_prompt_path = Path(args.labeller_prompt).resolve()
         reasoning_prompt_path = Path(args.reasoning_prompt).resolve()
 
-        for i, row in truthset.iterrows():
+        semaphore = asyncio.Semaphore(max(1, args.max_concurrency))
+        start_time = time.perf_counter()
+        completed = 0
+        token_limit_rejection_count = 0
+        failed_row_count = 0
+
+        async def evaluate_row(row_idx: int, row):
+            nonlocal token_limit_rejection_count, failed_row_count
             query = row["Question"]
             expected_answer = row["Expected Answer"]
 
-            # build the graph each time, to clear context
-            memory = MemorySaver()
-            graph = build_graph(
-                llm=llm,
-                vector_store=vector_store,
-                checkpointer=memory,
-                prompt_path=reasoning_prompt_path,
-            )
-
-            rm_label_result = await run_rm_labeller(
-                pydantic_rm_labeller_model,
-                rm_descriptions,
-                query,
-                prompt_path=labeller_prompt_path,
-            )
-            rm_labels.append(rm_label_result)
-
-            config = {"configurable": {"rm_filter": rm_label_result.rm_number}}
-            response = answer_once(graph, query, config=config)
-            responses.append(response)
-
-            # Score correctness if a reference answer is provided
-            if pd.notna(expected_answer) and str(expected_answer).strip():
+            async with semaphore:
                 try:
-                    score_dict = score_correctness(
+                    # Build graph each time to clear context.
+                    memory = MemorySaver()
+                    graph = build_graph(
                         llm=llm,
-                        question=query,
-                        generated_answer=response["answer"],
-                        reference_answer=expected_answer,
+                        vector_store=vector_store,
+                        checkpointer=memory,
+                        prompt_path=reasoning_prompt_path,
                     )
-                    correctness_scores.append(score_dict["score"])
-                    correctness_reasoning.append(score_dict["reasoning"])
-                except Exception as e:
-                    print(f"Error scoring correctness for query {i}: {e}")
-                    correctness_scores.append(None)
-                    correctness_reasoning.append(None)
-            else:
-                correctness_scores.append(None)
-                correctness_reasoning.append(None)
 
-            if (i + 1) % 10 == 0:
-                print(f"Processed {i + 1}/{len(truthset)} questions")
+                    rm_label_result = await with_exponential_backoff(
+                        op_name="run_rm_labeller",
+                        row_idx=row_idx,
+                        operation=lambda: run_rm_labeller(
+                            pydantic_rm_labeller_model,
+                            rm_descriptions,
+                            query,
+                            prompt_path=labeller_prompt_path,
+                        ),
+                        max_retries=args.max_retries,
+                        initial_backoff_seconds=args.initial_backoff_seconds,
+                        max_backoff_seconds=args.max_backoff_seconds,
+                        retryable_exception_types=retryable_exception_types,
+                    )
 
-        truthset["RM Number Result"] = [i.rm_number for i in rm_labels]
-        truthset["RM Number Reasoning"] = [i.reasoning for i in rm_labels]
-        truthset["Answer"] = [i["answer"] for i in responses]
-        truthset["Retrieved Files"] = [i["source_names"] for i in responses]
-        truthset["Retrieved Contents"] = [i["source_contents"] for i in responses]
+                    config = {"configurable": {"rm_filter": rm_label_result.rm_number}}
+                    response = await with_exponential_backoff(
+                        op_name="answer_once",
+                        row_idx=row_idx,
+                        operation=lambda: asyncio.to_thread(
+                            answer_once, graph, query, config=config
+                        ),
+                        max_retries=args.max_retries,
+                        initial_backoff_seconds=args.initial_backoff_seconds,
+                        max_backoff_seconds=args.max_backoff_seconds,
+                        retryable_exception_types=retryable_exception_types,
+                    )
+
+                    score = None
+                    score_reasoning = None
+                    if pd.notna(expected_answer) and str(expected_answer).strip():
+                        score_dict = await with_exponential_backoff(
+                            op_name="score_correctness",
+                            row_idx=row_idx,
+                            operation=lambda: asyncio.to_thread(
+                                score_correctness,
+                                llm=llm,
+                                question=query,
+                                generated_answer=response["answer"],
+                                reference_answer=expected_answer,
+                            ),
+                            max_retries=args.max_retries,
+                            initial_backoff_seconds=args.initial_backoff_seconds,
+                            max_backoff_seconds=args.max_backoff_seconds,
+                            retryable_exception_types=retryable_exception_types,
+                        )
+                        score = score_dict["score"]
+                        score_reasoning = score_dict["reasoning"]
+
+                    return {
+                        "row_idx": row_idx,
+                        "rm_label_result": rm_label_result,
+                        "response": response,
+                        "score": score,
+                        "score_reasoning": score_reasoning,
+                        "error": None,
+                    }
+                except Exception as error:
+                    error_text = str(error)
+                    if is_token_or_rate_limit_error(error):
+                        token_limit_rejection_count += 1
+                    failed_row_count += 1
+                    print(
+                        f"Error evaluating row {row_idx}. "
+                        f"Question: {query!r}. Error: {error_text}"
+                    )
+                    return {
+                        "row_idx": row_idx,
+                        "rm_label_result": None,
+                        "response": None,
+                        "score": None,
+                        "score_reasoning": None,
+                        "error": error_text,
+                    }
+
+        tasks = [
+            asyncio.create_task(evaluate_row(row_idx=i, row=row))
+            for i, row in truthset.iterrows()
+        ]
+        for done in asyncio.as_completed(tasks):
+            result = await done
+            row_idx = result["row_idx"]
+            rm_labels[row_idx] = result["rm_label_result"]
+            responses[row_idx] = result["response"]
+            correctness_scores[row_idx] = result["score"]
+            correctness_reasoning[row_idx] = result["score_reasoning"]
+            eval_errors[row_idx] = result["error"]
+
+            completed += 1
+            if completed % 10 == 0 or completed == n_rows:
+                print(f"Processed {completed}/{n_rows} questions")
+
+        elapsed_seconds = time.perf_counter() - start_time
+        print(f"Parallel evaluation completed in {elapsed_seconds:.2f} seconds")
+
+        truthset["RM Number Result"] = [
+            r.rm_number if r is not None else None for r in rm_labels
+        ]
+        truthset["RM Number Reasoning"] = [
+            r.reasoning if r is not None else None for r in rm_labels
+        ]
+        truthset["Answer"] = [r["answer"] if r is not None else None for r in responses]
+        truthset["Retrieved Files"] = [
+            r["source_names"] if r is not None else None for r in responses
+        ]
+        truthset["Retrieved Contents"] = [
+            r["source_contents"] if r is not None else None for r in responses
+        ]
         truthset["Correctness Score"] = correctness_scores
         truthset["Correctness Reasoning"] = correctness_reasoning
+        truthset["Evaluation Error"] = eval_errors
 
         # Calculate accuracy
-        correct = (truthset["RM Number Result"] == truthset["Expected Framework"]).sum()
-        accuracy = correct / len(truthset)
+        valid_rm_rows = truthset["RM Number Result"].notna()
+        valid_rm_total = valid_rm_rows.sum()
+        if valid_rm_total > 0:
+            correct = (
+                truthset.loc[valid_rm_rows, "RM Number Result"]
+                == truthset.loc[valid_rm_rows, "Expected Framework"]
+            ).sum()
+            accuracy = correct / valid_rm_total
+        else:
+            accuracy = 0.0
         print(f"Accuracy: {accuracy:.4f}")
 
         # Calculate correctness metrics
@@ -223,6 +354,12 @@ async def run_eval_loop(args):
         mlflow.log_metric("Percentage of Answers Perfect", pct_perfect)
         mlflow.log_metric(
             "Percentage of Answers Perfect or Correct", pct_correct_or_better
+        )
+        mlflow.log_metric("evaluation_duration_seconds", elapsed_seconds)
+        mlflow.log_metric("evaluation_max_concurrency", args.max_concurrency)
+        mlflow.log_metric("evaluation_failed_rows", failed_row_count)
+        mlflow.log_metric(
+            "token_or_rate_limit_rejection_rows", token_limit_rejection_count
         )
 
         # Save and log results artifact
