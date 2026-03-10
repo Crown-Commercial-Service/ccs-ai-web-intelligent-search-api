@@ -161,6 +161,7 @@ async def run_eval_loop(args):
 
     if args.num_samples:
         truthset = truthset.head(args.num_samples)
+    truthset = truthset.reset_index(drop=True)
 
     print(f"Evaluating {len(truthset)} samples...")
 

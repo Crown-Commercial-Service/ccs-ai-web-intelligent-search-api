@@ -1,4 +1,5 @@
 import asyncio
+import pytest
 
 from src.wis.parallel_eval_utils import (
     is_retryable_error,
@@ -62,7 +63,7 @@ def test_with_exponential_backoff_raises_non_retryable(monkeypatch):
     async def bad_operation():
         raise NonRetryableError("some unrelated failure")
 
-    try:
+    with pytest.raises(NonRetryableError):
         asyncio.run(
             with_exponential_backoff(
                 op_name="test_op",
@@ -74,12 +75,39 @@ def test_with_exponential_backoff_raises_non_retryable(monkeypatch):
                 retryable_exception_types=(RetryableError,),
             )
         )
-    except NonRetryableError:
-        pass
-    else:
-        raise AssertionError("Expected NonRetryableError to be raised")
 
     assert sleep_calls == []
+
+
+def test_with_exponential_backoff_exhausts_max_retries(monkeypatch):
+    sleep_calls = []
+
+    async def fake_sleep(seconds):
+        sleep_calls.append(seconds)
+
+    monkeypatch.setattr(asyncio, "sleep", fake_sleep)
+    monkeypatch.setattr(
+        "src.wis.parallel_eval_utils.random.uniform", lambda _a, _b: 1.0
+    )
+
+    async def always_fails():
+        raise RetryableError("429 rate limit")
+
+    with pytest.raises(RetryableError):
+        asyncio.run(
+            with_exponential_backoff(
+                op_name="test_op",
+                row_idx=3,
+                operation=always_fails,
+                max_retries=3,
+                initial_backoff_seconds=1.0,
+                max_backoff_seconds=30.0,
+                retryable_exception_types=(RetryableError,),
+            )
+        )
+
+    # 3 retries → 3 sleep calls (after attempts 0, 1, 2; attempt 3 raises)
+    assert len(sleep_calls) == 3
 
 
 def test_is_token_or_rate_limit_error_matches_common_messages():

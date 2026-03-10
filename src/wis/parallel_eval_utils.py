@@ -1,6 +1,6 @@
 import asyncio
 import random
-from typing import Awaitable, Callable, Iterable, Type
+from typing import Any, Awaitable, Callable, Iterable, Type
 
 
 def is_token_or_rate_limit_error(error: Exception) -> bool:
@@ -36,7 +36,7 @@ async def with_exponential_backoff(
     initial_backoff_seconds: float,
     max_backoff_seconds: float,
     retryable_exception_types: Iterable[Type[BaseException]],
-):
+) -> Any:
     """Run operation with jittered exponential backoff for retryable errors."""
     for attempt in range(max_retries + 1):
         try:
